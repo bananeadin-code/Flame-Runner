@@ -7,6 +7,7 @@ NULL_TOKENS = {"", "-", "--", "n/a", "na", "none", "nan", "?"}
 NUMBER = re.compile(r"\d*\.?\d+(?:[eE][-+]?\d+)?")
 UNIT = re.compile(r"\d\s*([a-zA-Zµμ%°]+(?:/[a-zA-Z]+)?)")
 O2_PERCENT = re.compile(r"(\d*\.?\d+)\s*%\s*O2", re.IGNORECASE)
+FORMULA = re.compile(r"\b(?:[A-Z][a-z]?\d*)+\d(?:[A-Z][a-z]?\d*)*\b")
 
 PRESSURE_KPA = {"kpa": 1.0, "atm": 101.325, "bar": 100.0, "mmhg": 0.133322, "psi": 6.89476, "psia": 6.89476}
 LENGTH_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0, "micron": 0.001, "µm": 0.001, "um": 0.001}
@@ -51,11 +52,15 @@ def parse_o2(raw: object) -> Value | None:
         return None
     text = str(raw)
     match = O2_PERCENT.search(text)
-    value = Value(float(match.group(1)), float(match.group(1)), "%", "~" in text) if match else parse(text)
+    # se quitan fórmulas (O2, CO2, C2H4) para no leer su dígito como valor: "LOW O2" no es 2 %
+    value = Value(float(match.group(1)), float(match.group(1)), "%", "~" in text) if match else parse(FORMULA.sub(" ", text))
     if value is None:
         return None
     factor = 0.01 if value.unit == "%" or value.high > 1 else 1.0
-    return value.scaled(factor, "fraction")
+    if value.unit == "%" and value.high > 100:
+        factor = 0.0001  # celda de Excel con formato de porcentaje: "3400%" en PSI-20 es 34 %
+    fraction = value.scaled(factor, "fraction")
+    return fraction if 0 <= fraction.low and fraction.high <= 1 else None
 
 
 def convert(value: Value | None, kind: str, default_unit: str | None = None) -> Value | None:
