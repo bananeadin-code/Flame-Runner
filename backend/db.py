@@ -1,9 +1,13 @@
 import sqlite3
 from collections.abc import Iterator
+from pathlib import Path
 
 from .config import settings
 
-# Realizar conexión con una base de datos SQLite
+# realizar conexión a la base de datos y cargar el esquema
+
+SCHEMA = Path(__file__).with_name("schema.sql")
+
 
 def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(settings.db_path)
@@ -17,6 +21,7 @@ def init_db() -> None:
     conn = connect()
     try:
         conn.execute("PRAGMA journal_mode = WAL")
+        conn.executescript(SCHEMA.read_text(encoding="utf-8"))
     finally:
         conn.close()
 
