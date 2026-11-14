@@ -1,0 +1,999 @@
+{
+  "accession": "PSI-26",
+  "acknowledgments": "",
+  "approach": "The experiment was conducted aboard the International Space Station (ISS) inside the Microgravity Glove Box (MSG). Custom-made fabric samples consisting of 75% cotton and 25% fiberglass (by mass) measuring were used as a fuel source as well as Nomex fabric and Ultem. A Kanthal wire (29-gage)igniter was used to initiate combustion at one end of the fabric. Airflow was controlled using a variable speed fan, with airflow speeds reaching as high as 40 cm/s. The airflow was directed along the fuel surface in either the opposed or concurrent direction.\n\nThis investigation explored two primary air flow configurations; concurrent-flow and opposed-flow. With concurrent-flow air flows in the same direction as the flame spread and in opposed-flow air flows in the opposite direction of flame spread. Flames were observed in the top and edge profiles and data was collected on flame size, shape, color, spread rate, and potential flame quenching. The samples were placed in a small flow duct (76 mm x 76 mm cross section) that allowed for airflow across the fabric. Other sample shapes were utilized as well including spheres and cylinders.",
+  "assays": [],
+  "contacts": [
+    {
+      "@id": "",
+      "address": "",
+      "affiliation": "NASA GRC",
+      "comments": [
+        {
+          "name": "Study Person REF",
+          "value": ""
+        }
+      ],
+      "email": "sandra.olson@nasa.gov",
+      "fax": "",
+      "firstName": "Sandra L.",
+      "lastName": "Olson",
+      "midInitials": "",
+      "phone": "",
+      "roles": [
+        {
+          "@id": "UPDBsFjwjds0hw6t0IuVN6evepdczdMm2HLYqwom",
+          "annotationValue": "Project Scientist",
+          "comments": [],
+          "termAccession": "Project Scientist",
+          "termSource": ""
+        }
+      ]
+    },
+    {
+      "@id": "",
+      "address": "",
+      "affiliation": "NASA GRC",
+      "comments": [
+        {
+          "name": "Study Person REF",
+          "value": ""
+        }
+      ],
+      "email": "paul.ferkul@nasa.gov",
+      "fax": "",
+      "firstName": "Paul",
+      "lastName": "Ferkul",
+      "midInitials": "",
+      "phone": "",
+      "roles": [
+        {
+          "@id": "dEBvA2jSs25xM9IfCv5ploF8MUDFt0ACKekf97KJ",
+          "annotationValue": "Principal Investigator (PI)",
+          "comments": [],
+          "termAccession": "Principal Investigator (PI)",
+          "termSource": ""
+        }
+      ]
+    },
+    {
+      "@id": "",
+      "address": "",
+      "affiliation": "Case Western Reserve University",
+      "comments": [
+        {
+          "name": "Study Person REF",
+          "value": ""
+        }
+      ],
+      "email": "fumiaki.takahashi@case.edu",
+      "fax": "",
+      "firstName": "Funiaki",
+      "lastName": "Takahashi",
+      "midInitials": "",
+      "phone": "",
+      "roles": [
+        {
+          "@id": "59J36d8A36ZR1iSs6NNVDRYelIkilTNb30me8Erm",
+          "annotationValue": "Co-Investigator (Co-I)",
+          "comments": [],
+          "termAccession": "Co-Investigator (Co-I)",
+          "termSource": ""
+        }
+      ]
+    },
+    {
+      "@id": "",
+      "address": "",
+      "affiliation": "Case Western Reserve University",
+      "comments": [
+        {
+          "name": "Study Person REF",
+          "value": ""
+        }
+      ],
+      "email": "jst2@case.edu",
+      "fax": "",
+      "firstName": "James",
+      "lastName": "T'ien",
+      "midInitials": "",
+      "phone": "",
+      "roles": [
+        {
+          "@id": "59J36d8A36ZR1iSs6NNVDRYelIkilTNb30me8Erm",
+          "annotationValue": "Co-Investigator (Co-I)",
+          "comments": [],
+          "termAccession": "Co-Investigator (Co-I)",
+          "termSource": ""
+        }
+      ]
+    }
+  ],
+  "description": "",
+  "dirty": false,
+  "doi": "10.60555/58h4-dy80",
+  "experimentHardware": "Microgravity Science Glovebox",
+  "experimentHardwareLink": "https://www1.grc.nasa.gov/space/iss-research/msg/",
+  "experimentalTable": [
+    {
+      "_id": {
+        "$oid": "67a3768509ed061032c125fb"
+      },
+      "date_created": {
+        "$date": 1738765957125
+      },
+      "date_modified": {
+        "$date": 1738765957125
+      },
+      "file_name": "PSI-26_Experimental table_BASS.csv",
+      "file_size": 4726,
+      "remote_path": "/Home/psi-data/PSI-26/Experimental table/PSI-26_Experimental table_BASS.csv",
+      "remote_url": "/datamanager/file/Home/psi-data/PSI-26/Experimental table/PSI-26_Experimental table_BASS.csv",
+      "resource_id": {
+        "$oid": "66cf53d46f1142c964b2e0a8"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Experimental table/PSI-26_Experimental table_BASS.csv",
+      "s3_version_id": "R1UsWo0ifZNvvIVOOPLjSGA21CjBoE4I",
+      "study_id": {
+        "$oid": "67dafcfac3501a37c2c60df9"
+      },
+      "subcategory": "",
+      "version": 1,
+      "visible": true
+    }
+  ],
+  "experiments": [],
+  "factors": [],
+  "filesDisabled": null,
+  "flightProgram": "International Space Station (ISS)",
+  "funding": "",
+  "hypothesis": "BASS experiments were based on the hypothesis that materials in microgravity, with adequate ventilation, burn as well if not better than the same material in normal gravity with other conditions being identical (pressure, oxygen concentration, temperature, etc.) To test this hypothesis with any but the thinnest materials requires extended microgravity time – longer than available in drop towers or parabolic aircraft.",
+  "identifiers": [],
+  "images": [],
+  "investigationAcronym": "BASS",
+  "investigationEndDate": "06-30-2013",
+  "investigationStartDate": "10-01-2009",
+  "licenseIdentifier": "CC0-1.0",
+  "licenseLink": "https://spdx.org/licenses/CC0-1.0.html",
+  "licenseName": "Creative Commons Zero v1.0 Universal",
+  "managingNasaCenter": "Glenn Research Center (GRC)",
+  "missionEnd": "",
+  "missionLink": "",
+  "missionName": "",
+  "missionStart": "",
+  "modified": [],
+  "modifiedDate": "19-Mar-2025",
+  "objective": "The two main objectives for BASS are to:\n    1.) Begin to bridge the gap between the normal gravity NASA-STD-6001 Test#1 method, ground-based microgravity tests, and actual material flammability in microgravity. The relation between these can be investigated by observing flames burning for the longer times available in flight. Practical, realistic (thicker) fuels in typical geometries will be examined, including wake flames which have characteristics of a fire burning behind another object (for example, a fire burning in tight area which may not be easily accessible).\n    2.) Assess the effectiveness of an inert, gaseous extinguishing agent (similar to that used on ISS) in putting out flames over different materials, geometries, preheating, and flow.",
+  "organizations": [],
+  "payloads": [],
+  "projectIdentifier": "",
+  "projectLink": "",
+  "projectTitle": "",
+  "projectType": "Microgravity Investigation",
+  "proposalTitle": "",
+  "public": true,
+  "publications": [
+    {
+      "authorList": "Spivey Reggie, Luz Paul",
+      "comments": [],
+      "doi": "10.2514/6.2006-941",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "The Microgravity Science Glovebox as a Platform for Exploration Research on the International Space Station"
+    },
+    {
+      "authorList": "Bhattacharjee Subrata, Laue Matthew, Carmignani Luca, Ferkul Paul, Olson Sandra",
+      "comments": [],
+      "doi": "10.1016/j.firesaf.2015.11.011",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "Opposed-flow flame spread: A comparison of microgravity and normal gravity experiments to establish the thermal regime"
+    },
+    {
+      "authorList": "Takahashi Shuhei, Ebisawa Tomoya, Bhattacharjee Subrata, Ihara Tadayoshi",
+      "comments": [],
+      "doi": "10.1016/j.proci.2014.07.017",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "Simplified model for predicting difference between flammability limits of a thin material in normal gravity and microgravity environments"
+    },
+    {
+      "authorList": "S Bhattacharjee, R Nagarkar, Y Nakamura",
+      "comments": [],
+      "doi": "10.1080/00102202.2014.900056",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "A Correlation for an Effective Flow Velocity for Capturing the Boundary Layer Effect in Opposed-Flow Flame Spread over Thin Fuels"
+    },
+    {
+      "authorList": "Bhattacharjee Subrata, Paolini Christopher P., Miller Fletcher, Nagarkar Rohit",
+      "comments": [],
+      "doi": "10.1504/PCFD.2012.048249",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "Radiation signature in opposed-flow flame spread"
+    },
+    {
+      "authorList": "Bhattacharjee Subrata, Cartnignani Luca",
+      "comments": [],
+      "doi": "10.1299/jsmeatem.2015.14.289",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "OS24-1 The Effect of Boundary Layer on Blow-Off Extinction in Opposed-Flow Flame Spread: Results of Experiments and Simplified Analysis(invited,Scale modeling on solid combustion,OS24 Scale modeling,FLUID AND THERMODYNAMICS)"
+    },
+    {
+      "authorList": "JR Villaraza, L Carmignani, S Bhattacharjee",
+      "comments": [],
+      "doi": "",
+      "pubMedID": "",
+      "status": {
+        "@id": "l87xqHQEQuC4rNfO31zRSVlRomoXfQjaWFyzxZZZ",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": ""
+      },
+      "title": "Role of Gas Radiation in the Mechanism of Opposed-Flow Flame Spread in a Microgravity Environment"
+    },
+    {
+      "authorList": "P Ferkul, SL Olson, F Takahashi, M Endo, MC Johnston, JS Tien",
+      "comments": [],
+      "doi": "",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "Thickness and Fuel Preheating Effects on Material Flammability in Microgravity from the BASS Experiment"
+    },
+    {
+      "authorList": "S Bhattacharjee, M Bundy, C Paolini, G Patel, W Tran.",
+      "comments": [],
+      "doi": "10.1016/j.proci.2012.05.076",
+      "pubMedID": "",
+      "status": {
+        "@id": "Rd2oZxVKYUnMCRj3tbHg0eGQhfrFmtiEFnMOyDHF",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": "EFO"
+      },
+      "title": "A novel apparatus for flame spread study"
+    },
+    {
+      "authorList": "GR Bornand, FJ Miller, JM Pepper, SL Olson, IS Wichman",
+      "comments": [],
+      "doi": "",
+      "pubMedID": "",
+      "status": {
+        "@id": "l87xqHQEQuC4rNfO31zRSVlRomoXfQjaWFyzxZZZ",
+        "annotationValue": "published",
+        "comments": [],
+        "termAccession": "http://www.ebi.ac.uk/efo/EFO_0001796",
+        "termSource": ""
+      },
+      "title": "Opposed-Flow Flame Spread in a Narrow Channel Apparatus over Thin PMMA Sheets"
+    }
+  ],
+  "related_glds": "PSI-107,PSI-25",
+  "releaseDate": "30-Jun-2013",
+  "removed": [
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612723
+      },
+      "date_modified": {
+        "$date": 1726714612723
+      },
+      "file_name": "Impacts_Benefits1.rtf",
+      "file_size": 1150.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/22142/Impacts_Benefits1.rtf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/Impacts_Benefits1.rtf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12369036/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/Impacts_Benefits1.rtf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612724
+      },
+      "date_modified": {
+        "$date": 1726714612724
+      },
+      "file_name": "60054mdfh001.pdf",
+      "file_size": 192768.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/60054mdfh001.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/60054mdfh001.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651643/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/60054mdfh001.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612724
+      },
+      "date_modified": {
+        "$date": 1726714612724
+      },
+      "file_name": "60054mdfh002.pdf",
+      "file_size": 133889.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/60054mdfh002.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/60054mdfh002.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651644/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/60054mdfh002.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612725
+      },
+      "date_modified": {
+        "$date": 1726714612725
+      },
+      "file_name": "PMMA sheet MFD1066.pdf",
+      "file_size": 52408.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/PMMA sheet MFD1066.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/PMMA sheet MFD1066.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651645/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/PMMA sheet MFD1066.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612726
+      },
+      "date_modified": {
+        "$date": 1726714612726
+      },
+      "file_name": "S1183MFA1020.pdf",
+      "file_size": 121535.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFA1020.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFA1020.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651647/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFA1020.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612726
+      },
+      "date_modified": {
+        "$date": 1726714612726
+      },
+      "file_name": "S1183MFA1065.pdf",
+      "file_size": 65227.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFA1065.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFA1065.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651648/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFA1065.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612727
+      },
+      "date_modified": {
+        "$date": 1726714612727
+      },
+      "file_name": "s1183mfa1085-Spherical sample final.pdf",
+      "file_size": 78407.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfa1085-Spherical sample final.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfa1085-Spherical sample final.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651649/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfa1085-Spherical sample final.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612728
+      },
+      "date_modified": {
+        "$date": 1726714612728
+      },
+      "file_name": "s1183mfa1090-Cylindrical Samples.pdf",
+      "file_size": 78284.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfa1090-Cylindrical Samples.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfa1090-Cylindrical Samples.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651650/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfa1090-Cylindrical Samples.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612729
+      },
+      "date_modified": {
+        "$date": 1726714612729
+      },
+      "file_name": "s1183mfa1110-flat.pdf",
+      "file_size": 129048.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfa1110-flat.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfa1110-flat.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651651/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfa1110-flat.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612729
+      },
+      "date_modified": {
+        "$date": 1726714612729
+      },
+      "file_name": "s1183mfa1111-flat.pdf",
+      "file_size": 58392.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfa1111-flat.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfa1111-flat.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651652/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfa1111-flat.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612730
+      },
+      "date_modified": {
+        "$date": 1726714612730
+      },
+      "file_name": "S1183MFD1022.pdf",
+      "file_size": 55267.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFD1022.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFD1022.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651654/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFD1022.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612731
+      },
+      "date_modified": {
+        "$date": 1726714612731
+      },
+      "file_name": "s1183mfd1086_REV-.pdf",
+      "file_size": 595300.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfd1086_REV-.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfd1086_REV-.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651657/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfd1086_REV-.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612732
+      },
+      "date_modified": {
+        "$date": 1726714612732
+      },
+      "file_name": "s1183mfd1091_REV-.pdf",
+      "file_size": 65282.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfd1091_REV-.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfd1091_REV-.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651658/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfd1091_REV-.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612733
+      },
+      "date_modified": {
+        "$date": 1726714612733
+      },
+      "file_name": "s1183mfd1116_REV-.pdf",
+      "file_size": 1108850.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/s1183mfd1116_REV-.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/s1183mfd1116_REV-.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651659/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/s1183mfd1116_REV-.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612734
+      },
+      "date_modified": {
+        "$date": 1726714612734
+      },
+      "file_name": "SPICE-front-window.pdf",
+      "file_size": 148197.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/SPICE-front-window.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/SPICE-front-window.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651661/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/SPICE-front-window.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612735
+      },
+      "date_modified": {
+        "$date": 1726714612735
+      },
+      "file_name": "60054MAFH000_C.pdf",
+      "file_size": 562119.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/60054MAFH000_C.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/60054MAFH000_C.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651662/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/60054MAFH000_C.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612735
+      },
+      "date_modified": {
+        "$date": 1726714612735
+      },
+      "file_name": "S1183MFA1000_A.pdf",
+      "file_size": 97640.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFA1000_A.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFA1000_A.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651663/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFA1000_A.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612736
+      },
+      "date_modified": {
+        "$date": 1726714612736
+      },
+      "file_name": "S1183MFD1021_A.pdf",
+      "file_size": 586059.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFD1021_A.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFD1021_A.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651664/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFD1021_A.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612737
+      },
+      "date_modified": {
+        "$date": 1726714612737
+      },
+      "file_name": "S1183MFD1026_A.pdf",
+      "file_size": 586727.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFD1026_A.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFD1026_A.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651665/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFD1026_A.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612737
+      },
+      "date_modified": {
+        "$date": 1726714612737
+      },
+      "file_name": "S1183MFD1041.pdf",
+      "file_size": 54006.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/S1183MFD1041.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/S1183MFD1041.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651666/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/S1183MFD1041.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612738
+      },
+      "date_modified": {
+        "$date": 1726714612738
+      },
+      "file_name": "Short Nozzle MFA10771.pdf",
+      "file_size": 52766.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/4189/Short Nozzle MFA10771.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/Short Nozzle MFA10771.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12651667/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/Short Nozzle MFA10771.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": {
+        "$date": 1726714612739
+      },
+      "date_modified": {
+        "$date": 1726714612739
+      },
+      "file_name": "SRD_BASS.pdf",
+      "file_size": 884257.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/125/SRD_BASS.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/SRD_BASS.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12660767/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/SRD_BASS.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": "",
+      "file_name": "DLD_BASS.pdf",
+      "file_size": 69653.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/11572/DLD_BASS.pdf",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/DLD_BASS.pdf",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12660771/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/DLD_BASS.pdf",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    },
+    {
+      "bucket": "",
+      "date_created": "",
+      "file_name": "BASS test matrix.xlsx",
+      "file_size": 111886.0,
+      "organization": "shared",
+      "psi_legacy": true,
+      "psi_legacy_s3_path": "legacy/7280/22141/BASS test matrix.xlsx",
+      "remote_path": "/Home/psi-data/PSI-26/Raw Data/BASS test matrix.xlsx",
+      "remote_url": "https://psi.ndc.nasa.gov/mpglobal/api/athena/file/12660775/?inline=1&log=1",
+      "resource_id": {
+        "$oid": "65e739c18e263688e9f9200d"
+      },
+      "restricted": false,
+      "s3_path": "psi-data/PSI-26/Raw Data/BASS test matrix.xlsx",
+      "s3_version_id": null,
+      "study_id": {
+        "$oid": "67a3768509ed061032c125fc"
+      },
+      "subcategory": "Legacy/",
+      "version": 1,
+      "visible": true
+    }
+  ],
+  "researchArea": "Combustion Science",
+  "researchImpacts": "Current NASA spacecraft materials selection is based on a standard test method (NASA–STD–6001 Test 1) that segregates material based on 1-g behavior without consideration of low gravity effects. A critical element of this understanding is the radiative heat emission from the flame. These results are used in first order models and predictions of heat release in spacecraft fires and as a means to extend heat release data from tests like the NASA cone calorimeter test (NASA–STD–6001 Test 2) to a performance-based material selection process. Using nitrogen as a flame suppressant in microgravity provides a direct link to current and planned extinguishment techniques.\nBASS results provide essential guidance to ground-based microgravity combustion research efforts. Detailed combustion models are validated using the simpler flow environment afforded by tests in microgravity. Once validated, they can be used to build more complex combustion models needed to capture the important details of flames burning in normal gravity. These models have wide applicability to the general understanding of many terrestrial combustion problems and will guide novel spacecraft design and ensure the safety of future crewed missions.",
+  "restricted": false,
+  "sourceAccession": "",
+  "sourceLink": "",
+  "spaceProgram": "National Aeronautics and Space Administration (NASA)",
+  "subResearchArea": "Spacecraft Fire Safety",
+  "submissionDate": "30-Jun-2013",
+  "title": "Burning and Suppression of Solids",
+  "totalFileSize": 163551372412.0,
+  "version": 4,
+  "versionMessage": "",
+  "versionMessageLevel": "",
+  "versionMessageLocations": [],
+  "versionReason": "Additional documentation release"
+}

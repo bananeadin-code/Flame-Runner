@@ -14,3 +14,7 @@ data/
 
 # Node
 node_modules/
+
+# Archivos de datos de PSI descargados (varios GB): se regeneran con backend/ingest/psi.py
+resources/psi/files/
+*.part
