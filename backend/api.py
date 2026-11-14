@@ -1,6 +1,7 @@
 import json
 import re
 import sqlite3
+from .sources import doi_url, locate_quote, psi_url, source_link
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -78,14 +79,16 @@ def scenarios(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
 
 
 @router.get("/investigations")
+@router.get("/investigations")
 def investigations(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
-    return rows(db.execute(
+    items = rows(db.execute(
         """SELECT i.accession, i.acronym, i.title, i.project_type, i.platform, i.primary_area, i.start_date, i.end_date,
                   (SELECT COUNT(*) FROM tests t WHERE t.accession = i.accession) AS tests,
                   (SELECT COUNT(DISTINCT f.id) FROM findings f JOIN citations c ON c.finding_id = f.id
                    WHERE f.accession = i.accession AND c.verified = 1) AS findings,
                   (SELECT COUNT(*) FROM publications p WHERE p.accession = i.accession) AS publications
            FROM investigations i ORDER BY findings DESC"""))
+    return [item | {"psi_url": psi_url(item["accession"])} for item in items]
 
 
 @router.get("/investigations/{accession}")
@@ -95,14 +98,45 @@ def investigation(accession: str, db: sqlite3.Connection = Depends(get_db)) -> d
                   research_impacts, start_date, end_date FROM investigations WHERE accession = ?""", (accession,)).fetchone()
     if row is None:
         raise HTTPException(404, f"Investigación desconocida: {accession}")
-    detail = dict(row)
-    detail["publications"] = rows(db.execute(
-        "SELECT title, authors, doi, status FROM publications WHERE accession = ? ORDER BY title", (accession,)))
+    detail = dict(row) | {"psi_url": psi_url(accession)}
+    detail["publications"] = [
+        pub | {"doi_url": doi_url(pub["doi"])}
+        for pub in rows(db.execute(
+            "SELECT title, authors, doi, status FROM publications WHERE accession = ? ORDER BY title", (accession,)))
+    ]
     detail["findings_by_area"] = dict(db.execute(
         """SELECT f.safety_area, COUNT(DISTINCT f.id) FROM findings f JOIN citations c ON c.finding_id = f.id
            WHERE f.accession = ? AND c.verified = 1 GROUP BY f.safety_area""", (accession,)).fetchall())
     detail["tests"] = db.execute("SELECT COUNT(*) FROM tests WHERE accession = ?", (accession,)).fetchone()[0]
     return detail
+
+
+@router.get("/documents/{document_id}/pages/{page_no}")
+def document_page(
+    document_id: int,
+    page_no: int,
+    quote: str | None = Query(None, max_length=2000),
+    db: sqlite3.Connection = Depends(get_db),
+) -> dict:
+    doc = db.execute(
+        """SELECT d.id, d.title, d.doc_type, d.accession, d.n_pages, d.path, i.acronym
+           FROM documents d LEFT JOIN investigations i ON i.accession = d.accession WHERE d.id = ?""",
+        (document_id,)).fetchone()
+    if doc is None:
+        raise HTTPException(404, "Documento desconocido")
+    page = db.execute("SELECT page_no, text FROM pages WHERE document_id = ? AND page_no = ?", (document_id, page_no)).fetchone()
+    if page is None:
+        raise HTTPException(404, f"El documento no tiene texto en la página {page_no}")
+    available = [r[0] for r in db.execute("SELECT page_no FROM pages WHERE document_id = ? ORDER BY page_no", (document_id,))]
+    index = available.index(page_no)
+    return {
+        "document_id": doc["id"], "title": doc["title"], "doc_type": doc["doc_type"], "accession": doc["accession"],
+        "acronym": doc["acronym"], "n_pages": doc["n_pages"], "page_no": page_no, "text": page["text"],
+        "highlight": locate_quote(page["text"], quote) if quote else None,
+        "prev_page": available[index - 1] if index > 0 else None,
+        "next_page": available[index + 1] if index + 1 < len(available) else None,
+        **source_link(doc["path"], doc["accession"]),
+    }
 
 
 @router.get("/tests")
@@ -165,6 +199,7 @@ def findings(
     for f in rows(db.execute(sql, params)):
         f["conditions"] = json.loads(f["conditions"] or "{}")
         f.update(score_finding(f, scen))
+        f.update(source_link(f.pop("document_path"), f["accession"]))
         items.append(f)
     items.sort(key=lambda f: f["score"], reverse=True)
     return {"scenario": scen, "total": len(items), "findings": items[offset:offset + limit]}
@@ -225,6 +260,8 @@ def search(
         if not expression:
             raise HTTPException(422, "La búsqueda no contiene palabras")
         results = rows(db.execute(sql, [expression, *params, limit]))
+        for r in results:
+            r.update(source_link(r.pop("document_path"), r["accession"]))
         if results:
             return {"query": q, "match": operator, "results": results}
     return {"query": q, "match": None, "results": []}

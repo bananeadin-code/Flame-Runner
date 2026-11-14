@@ -7,6 +7,7 @@ import time
 from collections import Counter
 from datetime import date
 from typing import Literal
+from .sources import source_link
 
 import anthropic
 import httpx
@@ -107,7 +108,7 @@ class FindingIndex:
             if self.items is None:
                 rows = db.execute(
                     """SELECT f.id, f.accession, f.statement, f.safety_area, f.finding_type, f.confidence,
-                              c.quote, p.page_no, d.id AS document_id, d.title AS document_title
+                            c.quote, p.page_no, d.id AS document_id, d.title AS document_title, d.path AS document_path
                        FROM findings f JOIN citations c ON c.finding_id = f.id AND c.verified = 1
                        JOIN pages p ON p.id = c.page_id JOIN documents d ON d.id = p.document_id""").fetchall()
                 self.items = [dict(r) | {"terms": Counter(terms(r["statement"] + " " + r["quote"]))} for r in rows]
@@ -130,21 +131,19 @@ class FindingIndex:
                 scored.append((score, item))
         scored.sort(key=lambda pair: pair[0], reverse=True)
         results, seen = [], set()
-        for _, item in scored:
+        top = scored[0][0] if scored else 1.0
+        for score, item in scored:
             key = re.sub(r"\W+", "", item["quote"].lower())[:120]
             if key not in seen:
                 seen.add(key)
-                results.append(item)
-            if len(results) == MAX_FINDINGS:
-                break
-        return results
+                results.append(item | {"relevance": round(score / top, 3)})
 
 
 finding_index = FindingIndex()
 
 
 def search_pages(db: sqlite3.Connection, query: str) -> list[dict]:
-    sql = """SELECT p.page_no, d.id AS document_id, d.title AS document_title, d.accession,
+    sql = """SELECT p.page_no, d.id AS document_id, d.title AS document_title, d.accession, d.path AS document_path
                     snippet(pages_fts, 0, '', '', '…', 60) AS excerpt
              FROM pages_fts JOIN pages p ON p.id = pages_fts.rowid JOIN documents d ON d.id = p.document_id
              WHERE pages_fts MATCH ? ORDER BY bm25(pages_fts) LIMIT ?"""
@@ -256,16 +255,19 @@ def render_sources(findings: list[dict], pages: list[dict]) -> tuple[str, list[d
         n = len(sources) + 1
         sources.append({"n": n, "kind": "finding", "finding_id": f["id"], "accession": f["accession"],
                         "statement": f["statement"], "quote": f["quote"], "safety_area": f["safety_area"],
-                        "document_id": f["document_id"], "document_title": f["document_title"], "page_no": f["page_no"]})
+                        "finding_type": f["finding_type"], "relevance": f["relevance"],
+                        "document_id": f["document_id"], "document_title": f["document_title"], "page_no": f["page_no"],
+                        **source_link(f["document_path"], f["accession"])})
         blocks.append(f"[{n}] Finding ({f['safety_area']}, {f['accession'] or 'general'}): {f['statement']}\n"
                       f"    Quote: \"{f['quote']}\" ({f['document_title']}, p. {f['page_no']})")
-    for p in pages:
+    for rank, p in enumerate(pages):
         n = len(sources) + 1
         sources.append({"n": n, "kind": "page", "accession": p["accession"], "quote": p["excerpt"],
-                        "document_id": p["document_id"], "document_title": p["document_title"], "page_no": p["page_no"]})
+                        "relevance": round(1 - rank / (2 * max(len(pages), 1)), 3),
+                        "document_id": p["document_id"], "document_title": p["document_title"], "page_no": p["page_no"],
+                        **source_link(p["document_path"], p["accession"])})
         blocks.append(f"[{n}] Excerpt ({p['document_title']}, p. {p['page_no']}): {p['excerpt']}")
     return "\n".join(blocks), sources
-
 
 @router.post("/chat")
 @limiter.limit("8/minute;60/day")
@@ -287,4 +289,7 @@ def chat(request: Request, body: ChatRequest, db: sqlite3.Connection = Depends(g
     answer, provider = ask(ANSWER_SYSTEM, messages, 1200)
     answer = re.sub(r"\s*\[(?:Regla|Rule|Norma)\s*\d+\]", "", answer)
     cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer) if 0 < int(n) <= len(sources)})
+    for source in sources:
+        source["cited"] = source["n"] in cited
+    sources.sort(key=lambda s: (not s["cited"], -s["relevance"]))
     return {"answer": answer, "sources": sources, "cited": cited, "provider": provider, "search_query": query}
