@@ -1,5 +1,3 @@
-"""Acceso a SQLite."""
-
 import sqlite3
 from collections.abc import Iterator
 
@@ -14,7 +12,6 @@ def connect() -> sqlite3.Connection:
 
 
 def init_db() -> None:
-    """Crea la carpeta de datos y la base de datos si no existen."""
     settings.db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = connect()
     try:
@@ -24,7 +21,6 @@ def init_db() -> None:
 
 
 def get_db() -> Iterator[sqlite3.Connection]:
-    """Dependencia de FastAPI: una conexión por petición."""
     conn = connect()
     try:
         yield conn

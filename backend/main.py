@@ -1,5 +1,3 @@
-"""App FastAPI. Ejecutar desde la raíz del repo: uvicorn backend.main:app --reload"""
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
