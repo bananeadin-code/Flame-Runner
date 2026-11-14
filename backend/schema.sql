@@ -104,6 +104,14 @@ CREATE TABLE IF NOT EXISTS chunks (
     UNIQUE (page_id, chunk_no)
 );
 
+CREATE TRIGGER IF NOT EXISTS pages_fts_insert AFTER INSERT ON pages BEGIN
+    INSERT INTO pages_fts (rowid, text) VALUES (new.id, new.text);
+END;
+
+CREATE TRIGGER IF NOT EXISTS pages_fts_delete AFTER DELETE ON pages BEGIN
+    INSERT INTO pages_fts (pages_fts, rowid, text) VALUES ('delete', old.id, old.text);
+END;
+
 CREATE TABLE IF NOT EXISTS findings (
     id           INTEGER PRIMARY KEY,
     accession    TEXT REFERENCES investigations(accession),

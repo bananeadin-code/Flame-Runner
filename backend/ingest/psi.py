@@ -1,3 +1,5 @@
+# Ejecutarlo para descargar los archivos de resource en un equipo
+
 import argparse
 import csv
 import json
