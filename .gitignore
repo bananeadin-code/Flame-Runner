@@ -11,5 +11,9 @@ data/
 
 node_modules/
 
-resources/psi/files/
+# de PSI solo se suben las 22 tablas verificadas (SHA256SUMS); lo demás se descarga
+resources/psi/files/**
+!resources/psi/files/**/
+!resources/psi/files/**/*Experimental table*.csv
+!resources/psi/files/SHA256SUMS
 *.part

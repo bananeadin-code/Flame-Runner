@@ -129,7 +129,7 @@ def normalize(row: Row, spec: TableSpec) -> tuple[dict, list[tuple[str, Value, s
         "diluent": diluent_of(row, spec),
         "o2_min": o2.low if o2 else None,
         "o2_max": o2.high if o2 else None,
-        "pressure_kpa": pressure.single if pressure else None,
+        "pressure_kpa": pressure.single if pressure and pressure.high > 0 else None,  # FLEX trae una fila con presión 0 (error de la tabla)
         "flow_min_cm_s": flow.low if flow else None,
         "flow_max_cm_s": flow.high if flow else None,
         "ignited": parse_bool(row.get(spec.ignited)),
