@@ -3,6 +3,7 @@ from collections.abc import Iterator
 
 from .config import settings
 
+# Realizar conexión con una base de datos SQLite
 
 def connect() -> sqlite3.Connection:
     conn = sqlite3.connect(settings.db_path)
