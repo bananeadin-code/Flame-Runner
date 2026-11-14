@@ -20,6 +20,12 @@ class Settings:
     model_extract: str = os.getenv("MODEL_EXTRACT", "claude-sonnet-5-5")
     model_chat: str = os.getenv("MODEL_CHAT", "claude-sonnet-5-5")
     db_path: Path = ROOT_DIR / os.getenv("DB_PATH", "data/flame.db")
+    chat_provider: str = os.getenv("CHAT_PROVIDER", "anthropic")
+    local_llm_url: str = os.getenv("LOCAL_LLM_URL", "").rstrip("/")
+    local_llm_model: str = os.getenv("LOCAL_LLM_MODEL", "")
+    local_llm_api_key: str = os.getenv("LOCAL_LLM_API_KEY", "")
+    local_llm_timeout: float = float(os.getenv("LOCAL_LLM_TIMEOUT", "90"))
+    chat_daily_limit: int = int(os.getenv("CHAT_DAILY_LIMIT", "300"))
     allowed_origins: list[str] = field(
         default_factory=lambda: _list(os.getenv("ALLOWED_ORIGINS", "http://localhost:5173"))
     )
