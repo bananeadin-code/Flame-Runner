@@ -25,6 +25,7 @@ class Settings:
     local_llm_model: str = os.getenv("LOCAL_LLM_MODEL", "")
     local_llm_api_key: str = os.getenv("LOCAL_LLM_API_KEY", "")
     local_llm_timeout: float = float(os.getenv("LOCAL_LLM_TIMEOUT", "90"))
+    local_llm_max_tokens: int = int(os.getenv("LOCAL_LLM_MAX_TOKENS", "4000"))
     chat_daily_limit: int = int(os.getenv("CHAT_DAILY_LIMIT", "300"))
     allowed_origins: list[str] = field(
         default_factory=lambda: _list(os.getenv("ALLOWED_ORIGINS", "http://localhost:5173"))
