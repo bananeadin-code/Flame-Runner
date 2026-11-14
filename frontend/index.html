@@ -1,13 +1,638 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Flame in freefall</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fuego en el espacio</title>
+<meta name="description" content="Cómo arde, se detecta y se apaga el fuego en microgravedad: datos, historia y extintores.">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo}=React;
+
+/* ===== Estructura ===== */
+const ORDEN=["inicio","intro","riesgos","recomendacion","prototipos","viento","oxigeno","sensores","comparacion","investigaciones","pruebas","ambiente","mediciones","publicaciones","historia"];
+const TITULO={inicio:"Fuego en el espacio",intro:"Introducción",riesgos:"Prioridades de riesgo",recomendacion:"Recomendación",prototipos:"Extintores y agentes",viento:"Flujo de viento",oxigeno:"Concentración de oxígeno",sensores:"Sensores o métodos de medición",comparacion:"Similitudes y diferencias",investigaciones:"Investigaciones",pruebas:"Resultados de pruebas",ambiente:"Ambiente operativo",mediciones:"Mediciones",publicaciones:"Documentos y publicaciones",historia:"Historia"};
+const GRUPO={recomendacion:"riesgos",prototipos:"riesgos",oxigeno:"viento",sensores:"viento",comparacion:"viento",investigaciones:"viento",pruebas:"viento",ambiente:"viento",mediciones:"viento",publicaciones:"viento"};
+const PADRE={recomendacion:"Prioridades de riesgo",prototipos:"Prioridades de riesgo",viento:"Dashboard",oxigeno:"Dashboard",sensores:"Dashboard",comparacion:"Dashboard",investigaciones:"Dashboard · Datos",pruebas:"Dashboard · Datos",ambiente:"Dashboard · Datos",mediciones:"Dashboard · Datos",publicaciones:"Dashboard · Datos"};
+const MENU=[["Introducción",["intro"]],["Prioridades de riesgo",["riesgos","recomendacion","prototipos"]],["Dashboard",["viento","oxigeno","sensores","comparacion"]],["Datos de la investigación",["investigaciones","pruebas","ambiente","mediciones","publicaciones"]],["Historia",["historia"]]];
+const CLAVES={viento:"ventilación aire humo",oxigeno:"o2 combustión llama",sensores:"detector cámara humo co",comparacion:"materiales llama forma",prototipos:"extintor co2 niebla agua espuma nitrógeno halón",riesgos:"materiales detección eléctrico",historia:"apolo mir saffire incendio video youtube",investigaciones:"investigations primary area iss cronograma",pruebas:"tests fuel outcome ignited burn time",ambiente:"pressure flow oxygen presion flujo",mediciones:"measurements quantity value unit",publicaciones:"documents publications status doc type"};
+
+const RIESGOS0=[
+ {n:"Materiales inflamables",p:8,i:9,r:"Cambiar materiales por ignífugos y guardar el resto en contenedores cerrados.",ac:["Inventariar materiales por módulo","Sustituir textiles y espumas","Sellar contenedores"]},
+ {n:"Detección tardía",p:7,i:8,r:"Combinar detectores de humo, gases y cámaras para ver una llama fría y esférica.",ac:["Añadir sensores de CO","Calibrar alarmas cada mes","Probar cámaras térmicas"]},
+ {n:"Fallo eléctrico",p:5,i:8,r:"Dividir la red en zonas que se puedan cortar sin apagar toda la nave.",ac:["Mapear circuitos","Instalar cortes por zona","Simular fallos"]},
+ {n:"Ventilación continua",p:6,i:5,r:"Apagar la ventilación del módulo afectado para no alimentar la llama.",ac:["Interruptor por módulo","Avisar a la tripulación","Reactivar tras apagar"]}];
+const PROTOS=[{n:"Extintor de CO₂",t:2.5,d:"Desplaza el oxígeno de la zona. Apaga rápido, pero exige máscara."},{n:"Niebla de agua fina",t:5,d:"Enfría con gotas muy pequeñas. Más lento y puede dañar equipos."},{n:"Cierre y corte de aire",t:8,d:"Aísla el módulo y apaga la ventilación. Lento, pero no usa agentes."}];
+const SENS=[{n:"Detector de humo",d:"Detecta partículas en el aire. Es el método más usado.",v:[70,80,40]},{n:"Cámara térmica",d:"Ve zonas calientes aunque no haya humo visible.",v:[85,60,30]},{n:"Sensor de monóxido de carbono",d:"Avisa de una combustión incompleta antes de que haya mucho humo.",v:[60,70,20]},{n:"Sensor de oxígeno",d:"Mide el O₂ y avisa si sube o baja demasiado.",v:[50,90,10]}];
+const COMP=[["s","Qué necesita","Combustible, oxígeno y calor","Combustible, oxígeno y calor"],["d","Forma de la llama","Gota alargada hacia arriba","Esfera pequeña y azulada"],["d","Corriente de aire","Convección natural","Solo ventilación forzada"],["d","Humo","Sube hacia el techo","Se acumula cerca de la fuente"],["s","Cómo se apaga","Quitando oxígeno, calor o combustible","Quitando oxígeno, calor o combustible"],["d","Agente extintor","Agua o espuma","CO₂ o niebla fina, cuidando los equipos"]];
+const HITOS=[["1967","Apolo 1","Un incendio en tierra, con oxígeno puro, cambia el diseño de las cápsulas."],["1997","Incendio en la Mir","Un generador de oxígeno se prende y el humo llena un módulo durante horas."],["2003","Mist en el Columbia","El proyecto Water Mist mide cómo las microgotas de agua frenan la llama."],["2015","Agua nebulizada en la ISS","Los dos primeros extintores portátiles llegan para sustituir las unidades de CO₂."],["2016","Saffire I","Se enciende fuego controlado en una nave de carga para estudiarlo."],["Hoy","Protocolos actuales","Detección por capas y simulaciones con datos de los experimentos."]];
+const TENDENCIA=[["riesgos","Prioridades de riesgo: qué atender primero a bordo"],["viento","Flujo de viento: cómo se mueve el humo en la cabina"],["oxigeno","Concentración de oxígeno: cuándo una llama se vuelve peligrosa"],["historia","Historia: los incidentes que cambiaron los protocolos"]];
+
+/* ===== Contenido: extintores y agentes (documentación) ===== */
+const EXTINTORES=[
+ {n:"Agua nebulizada (PFE)",r:"Microgotas de agua que enfrían la llama sin ser tóxicas.",p:[
+  "Origen: proyecto Water Mist Fire Suppression (Mist), dirigido por el Dr. T. McKinnon (Colorado School of Mines) a bordo del transbordador Columbia, misión STS-107 de 2003.",
+  "El estudio analizó cómo el diámetro de las microgotas y su concentración influyen en la velocidad, la intensidad y la geometría de la llama (NASA NP-2015-10-034).",
+  "Reemplazan a los sistemas de halón —prohibidos por su impacto ambiental y toxicidad— y a los de CO₂.",
+  "Tras su diseño, fabricación y certificación para vuelo, los dos primeros extintores portátiles de un lote de 9 llegaron a la ISS en diciembre de 2015 para sustituir las unidades de CO₂."]},
+ {n:"Dióxido de carbono (CO₂)",r:"El estándar previo en el transbordador y en los primeros años de la ISS.",p:[
+  "Desplaza el oxígeno de la zona y apaga rápido, pero exige máscara para la tripulación.",
+  "Limitación crítica: en el entorno cerrado y hermético de una nave, la descarga masiva eleva el riesgo de asfixia o hipercapnia y sobrecarga los sistemas de regeneración y soporte vital (ECLSS).",
+  "Por eso fue sustituido por agua nebulizada en los módulos habitados."]},
+ {n:"Espuma",r:"El agente del programa soviético y ruso: estación Mir y segmento ruso de la ISS.",p:[
+  "Caso histórico real: el 24 de febrero de 1997, un generador de oxígeno de combustible sólido (SFOG, perclorato de litio) en la Mir produjo un soplete de casi un metro con metal fundido y humo denso.",
+  "El cosmonauta Valeri Korzun utilizó extintores de espuma para sofocar las llamas mientras le suministraban dos extintores adicionales: tres en total."]},
+ {n:"Gases inertes (N₂, CO₂, He, Xe)",r:"Inyectar un gas que no alimenta la combustión.",p:[
+  "Nitrógeno: investigado a fondo en BASS y BASS-II, inyectado por boquillas sobre combustibles sólidos como esferas de PMMA, tejidos SIBAL, Nomex y Ultem.",
+  "Helio y CO₂: evaluados en FLEX y FLEX-2, en el Combustion Integrated Rack (CIR), para determinar la concentración molar límite que inhibe la combustión de gotas de hidrocarburos."]},
+ {n:"Venteo al vacío",r:"La última opción: aislar el módulo y despresurizar la cabina.",p:[
+  "Documentado en los protocolos de FLEX: ante un incendio incontrolable se aísla el módulo afectado y se despresuriza la cabina hacia el espacio exterior.",
+  "No usa agentes extintores, pero cuesta el aire y los suministros del módulo."]}];
+const EXPERIMENTOS=[
+ {n:"BASS · BASS-II · BASS-M",d:"En la Microgravity Science Glovebox (MSG) de la ISS. Extinción progresiva con inyección de nitrógeno sobre sólidos y textiles tratados con retardantes de llama (BASS-Milliken)."},
+ {n:"FLEX · FLEX-2",d:"En el Combustion Integrated Rack (CIR) de la ISS. Determinaron los límites de oxígeno (LOI) con supresores gaseosos como CO₂ y He."},
+ {n:"Saffire I–VI",d:"Combustión a gran escala ejecutada de forma remota en naves Cygnus no tripuladas tras abandonar la ISS. Investigó protocolos de supresión y limpieza atmosférica posterior al incendio."}];
+
+/* ===== Contenido: historia y vídeos ===== */
+const V_APOLO1=[
+ {id:"fa7bXO9zPXo",t:"How a 'Non-Hazardous' NASA Mission Turned Deadly",c:"Smithsonian"},
+ {id:"M0YB5r4vzVo",t:"Apollo 1's Fatal Fire Almost Ended the Spaceflight Program",c:"Seeker"},
+ {id:"5erzr4Ez4pg",t:"Apollo I: Remembering the Crew",c:"Tributo"},
+ {id:"6Xh0PkFm7UI",t:"Remembering the Astronauts of Apollo I",c:"Tributo"},
+ {id:"lXxNO_NPP3w",t:"Apollo I Crew Members Honored With Monument",c:"Tributo"},
+ {id:"05xdq6W9kRs",t:"NASA Opens Tribute to Apollo I Crew",c:"NASA"}];
+const V_APOLO13=[
+ {id:"WM8kjDF0IJU",t:"Apollo 13: Home Safe",c:"NASA"},
+ {id:"MdvoA-sjs0A",t:"Apollo 13: 'Houston, We've Had a Problem'",c:"NASA"},
+ {id:"Ilifg26TZrI",t:"Apollo 13 Views of the Moon in 4K",c:"NASA"},
+ {id:"lJiRA6GtxSA",t:"How Mission Control Saved the Apollo 13 Crew",c:"Smithsonian"},
+ {id:"5sjaZdr4cEQ",t:"Apollo 13 Space Mission Disaster (Hour by Hour)",c:"The Infographics Show"}];
+const CANALES=[{n:"NASA",u:"https://www.youtube.com/@NASA",d:"Misiones, documentales y archivo audiovisual oficial."},{n:"NASA Space Technology",u:"https://www.youtube.com/nasaspacetech",d:"Tecnología, experimentos y transferencia a la vida diaria."}];
+
+/* ===== Datos del dashboard (esquema investigations / tests / measurements / documents) ===== */
+const INV=[
+ {n:"Mist (agua nebulizada)",area:"Supresión",plat:"Transbordador",ini:2003,fin:2004,est:"Completada"},
+ {n:"BASS",area:"Supresión",plat:"ISS",ini:2012,fin:2013,est:"Completada"},
+ {n:"BASS-II",area:"Supresión",plat:"ISS",ini:2013,fin:2014,est:"Completada"},
+ {n:"BASS-M",area:"Supresión",plat:"ISS",ini:2016,fin:2017,est:"Completada"},
+ {n:"FLEX",area:"Fundamental",plat:"ISS",ini:2009,fin:2010,est:"Completada"},
+ {n:"FLEX-2",area:"Fundamental",plat:"ISS",ini:2011,fin:2012,est:"Completada"},
+ {n:"Saffire I",area:"Supresión",plat:"Cygnus",ini:2016,fin:2016,est:"Completada"},
+ {n:"Saffire II",area:"Supresión",plat:"Cygnus",ini:2016,fin:2017,est:"Completada"},
+ {n:"Saffire III",area:"Supresión",plat:"Cygnus",ini:2017,fin:2018,est:"Completada"},
+ {n:"Saffire IV",area:"Supresión",plat:"Cygnus",ini:2018,fin:2019,est:"Completada"},
+ {n:"Saffire V",area:"Supresión",plat:"Cygnus",ini:2019,fin:2020,est:"Completada"},
+ {n:"Saffire VI",area:"Supresión",plat:"Cygnus",ini:2020,fin:2021,est:"Completada"},
+ {n:"Confined Combustion",area:"Fundamental",plat:"ISS",ini:2018,fin:2019,est:"Completada"},
+ {n:"Materiales SIBAL",area:"Prevención",plat:"Terrestre",ini:2005,fin:2008,est:"Completada"},
+ {n:"Detección por capas",area:"Detección",plat:"ISS",ini:2019,fin:2021,est:"Completada"},
+ {n:"Sensores de partículas",area:"Detección",plat:"ISS",ini:2022,fin:2025,est:"En curso"},
+ {n:"Protocolos de inertización",area:"Prevención",plat:"ISS",ini:2025,fin:2027,est:"Planificada"}];
+const AREAS=["Prevención","Detección","Supresión","Fundamental"];
+const ANIO0=2002, ANIO1=2027;
+const PRUEBAS=[
+ {id:"T-101",fuel:"PMMA",clase:"A",ign:1,out:"Extinguida",burn:38},
+ {id:"T-102",fuel:"PMMA",clase:"A",ign:1,out:"Extinguida",burn:44},
+ {id:"T-103",fuel:"SIBAL",clase:"B",ign:1,out:"Extinguida",burn:61},
+ {id:"T-104",fuel:"SIBAL",clase:"B",ign:1,out:"Propagación",burn:120},
+ {id:"T-105",fuel:"Nomex",clase:"B",ign:1,out:"Extinguida",burn:52},
+ {id:"T-106",fuel:"Ultem",clase:"B",ign:0,out:"Sin ignición",burn:0},
+ {id:"T-107",fuel:"PMMA",clase:"A",ign:1,out:"Propagación",burn:96},
+ {id:"T-108",fuel:"Heptano",clase:"B",ign:1,out:"Extinguida",burn:33},
+ {id:"T-109",fuel:"Heptano",clase:"B",ign:1,out:"Extinguida",burn:29},
+ {id:"T-110",fuel:"Nomex",clase:"B",ign:0,out:"Sin ignición",burn:0},
+ {id:"T-111",fuel:"SIBAL",clase:"B",ign:1,out:"Extinguida",burn:57},
+ {id:"T-112",fuel:"PMMA",clase:"A",ign:1,out:"Extinguida",burn:41}];
+const AMB=[
+ {n:"BASS-II",pres:[60,101],flujo:[0,3],o2:[16,21]},
+ {n:"BASS-M",pres:[60,101],flujo:[0,2],o2:[16,21]},
+ {n:"FLEX",pres:[85,101],flujo:[1,12],o2:[14,30]},
+ {n:"FLEX-2",pres:[70,101],flujo:[2,18],o2:[15,28]},
+ {n:"Saffire I",pres:[30,101],flujo:[5,20],o2:[18,26]},
+ {n:"Saffire III",pres:[20,95],flujo:[4,22],o2:[17,25]},
+ {n:"Mist",pres:[101,101],flujo:[0,1],o2:[21,30]}];
+const RANGOS={pres:{t:"Presión operativa",u:"kPa",max:110},flujo:{t:"Velocidad de flujo",u:"cm/s",max:25},o2:{t:"Concentración de O₂",u:"%",max:35}};
+const MEDICIONES=[
+ {q:"Tiempo de combustión",u:"s",v:[[38,"T-101"],[44,"T-102"],[61,"T-103"],[120,"T-104"],[52,"T-105"],[96,"T-107"],[33,"T-108"],[29,"T-109"],[57,"T-111"],[41,"T-112"]]},
+ {q:"Velocidad de propagación",u:"mm/s",v:[[1.2,"T-101"],[1.5,"T-102"],[2.1,"T-103"],[3.4,"T-104"],[1.8,"T-105"],[2.9,"T-107"],[1.1,"T-111"],[1.3,"T-112"]]},
+ {q:"Temperatura máxima",u:"°C",v:[[612,"T-101"],[654,"T-102"],[498,"T-103"],[720,"T-104"],[540,"T-105"],[688,"T-107"],[462,"T-111"],[628,"T-112"]]},
+ {q:"Masa consumida",u:"g",v:[[2.4,"T-101"],[2.8,"T-102"],[3.6,"T-103"],[5.9,"T-104"],[3.1,"T-105"],[4.8,"T-107"],[2.2,"T-111"],[2.6,"T-112"]]},
+ {q:"Presión de la cámara",u:"kPa",v:[[101,"T-101"],[101,"T-102"],[94,"T-103"],[38,"T-104"],[101,"T-105"],[72,"T-107"],[101,"T-111"],[101,"T-112"]]},
+ {q:"Monóxido de carbono",u:"ppm",v:[[120,"T-101"],[135,"T-102"],[210,"T-103"],[340,"T-104"],[180,"T-105"],[290,"T-107"],[95,"T-111"],[128,"T-112"]]}];
+const PUBLICACIONES=[[2019,2],[2020,3],[2021,5],[2022,4],[2023,7],[2024,6],[2025,8],[2026,3]];
+const DOC_EST=[["Publicado",14],["En revisión",6],["Borrador",4]];
+const DOC_TIPO=[["Artículo",9],["Informe",7],["Protocolo",5],["Dataset",3]];
+
+/* ===== Utilidades ===== */
+function useRuta(){
+  const leer=()=>{const r=location.hash.replace("#/","");return ORDEN.includes(r)?r:"inicio"};
+  const [r,setR]=useState(leer);
+  useEffect(()=>{const f=()=>{setR(leer());window.scrollTo(0,0)};addEventListener("hashchange",f);return()=>removeEventListener("hashchange",f)},[]);
+  return r;
+}
+const L=({to,className,children,...p})=><a href={"#/"+to} className={className} {...p}>{children}</a>;
+
+const quieto=()=>typeof matchMedia!=="undefined"&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+/* Aparición suave al entrar en pantalla */
+function Rev({children,delay=0,as="div",className="",style,...p}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const el=ref.current;if(!el)return;
+    if(quieto()){el.classList.add("vis");return}
+    const io=new IntersectionObserver(([e])=>{if(e.isIntersecting){el.classList.add("vis");io.disconnect()}},{threshold:.05,rootMargin:"0px 0px -5% 0px"});
+    io.observe(el);return()=>io.disconnect();
+  },[]);
+  const T=as;
+  return <T ref={ref} className={"rev "+className} style={{transitionDelay:delay+"ms",...style}} {...p}>{children}</T>;
+}
+
+/* Contador animado */
+function Num({v,dec=0,suf=""}){
+  const [n,setN]=useState(quieto()?v:0);
+  useEffect(()=>{
+    if(quieto()){setN(v);return}
+    let r,ini;
+    const f=t=>{if(!ini)ini=t;const k=Math.min(1,(t-ini)/850);setN(v*(1-Math.pow(1-k,3)));if(k<1)r=requestAnimationFrame(f)};
+    r=requestAnimationFrame(f);return()=>cancelAnimationFrame(r);
+  },[v]);
+  return <>{n.toFixed(dec)}{suf}</>;
+}
+const Kpi=({v,dec=0,suf="",e,nota})=><div className="kpi"><b><Num v={v} dec={dec} suf={suf}/></b><small>{e}</small>{nota&&<em>{nota}</em>}</div>;
+const Barras=({datos,max})=>{
+  const m=max||Math.max(...datos.map(d=>d.v),1);
+  return <div className="barras">{datos.map((d,i)=><div className="fila-b" key={d.n+"-"+i}>
+    <span>{d.n}</span><div className="pista"><i className={d.c||""} style={{width:(d.v/m*100)+"%"}}/></div><b>{d.t!=null?d.t:d.v}</b></div>)}</div>;
+};
+function Progreso(){
+  const ref=useRef(null);
+  useEffect(()=>{
+    let pend=false;
+    const act=()=>{const h=document.documentElement,m=h.scrollHeight-h.clientHeight;if(ref.current)ref.current.style.transform="scaleX("+(m>0?h.scrollTop/m:0)+")";pend=false};
+    const ped=()=>{if(!pend){pend=true;requestAnimationFrame(act)}};
+    addEventListener("scroll",ped,{passive:true});addEventListener("resize",ped);act();
+    return()=>{removeEventListener("scroll",ped);removeEventListener("resize",ped)};
+  },[]);
+  return <div className="progreso" ref={ref} aria-hidden="true"/>;
+}
+
+/* ===== Portada: cinta ondulada ===== */
+function Cinta(){
+  const ref=useRef();
+  useEffect(()=>{
+    const c=ref.current,x=c.getContext("2d"),dpr=Math.min(devicePixelRatio||1,2);
+    let w,h,raf,t=0,mx=.5,suave=.5;
+    const aj=()=>{w=c.offsetWidth;h=c.offsetHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0)};
+    aj();addEventListener("resize",aj);
+    const mv=e=>{mx=e.clientX/innerWidth};addEventListener("mousemove",mv);
+    const cols=[["#FF3B3B","#FF9B8A"],["#0563B5","#7FB6EA"],["#A8A8A8","#E0E0E2"],["#B0B0B2","#0563B5"],["#7FB6EA","#0563B5"],["#FF3B3B","#B0B0B2"]];
+    const y=(u,k,o)=>{const e=Math.sin(Math.PI*u);return h*.52+Math.sin(u*7+t+k*.7+o)*h*.16*e+Math.sin(u*3-t*.7+k)*h*.07*e};
+    const dibuja=()=>{
+      x.clearRect(0,0,w,h);suave+=(mx-suave)*.045;t+=.01+suave*.022;
+      cols.forEach((cc,k)=>{
+        const g=x.createLinearGradient(0,0,w,0);g.addColorStop(0,cc[0]);g.addColorStop(1,cc[1]);
+        x.fillStyle=g;x.globalAlpha=.8;x.beginPath();const N=60;
+        for(let i=0;i<=N;i++){const u=i/N;const py=y(u,k,0)-k*5;i?x.lineTo(u*w*.95,py):x.moveTo(u*w*.95,py)}
+        for(let i=N;i>=0;i--){const u=i/N;x.lineTo(u*w*.95,y(u,k,.5)+Math.sin(Math.PI*u)*h*.07+k*5)}
+        x.closePath();x.fill();
+      });
+      x.globalAlpha=1;if(!quieto())raf=requestAnimationFrame(dibuja);
+    };
+    dibuja();
+    return()=>{cancelAnimationFrame(raf);removeEventListener("resize",aj);removeEventListener("mousemove",mv)};
+  },[]);
+  return <canvas ref={ref} className="cinta" aria-hidden="true"/>;
+}
+
+/* ===== Flujo de viento (canvas) ===== */
+function Viento({vel}){
+  const ref=useRef(),v=useRef(vel);v.current=vel;
+  useEffect(()=>{
+    const c=ref.current,x=c.getContext("2d"),dpr=Math.min(devicePixelRatio||1,2);
+    let w,h,ps,raf,t=0,ultimo=0,visible=true;
+    const aj=()=>{w=c.offsetWidth;h=c.offsetHeight;c.width=w*dpr;c.height=h*dpr;x.setTransform(dpr,0,0,dpr,0,0);
+      ps=Array.from({length:150},()=>({x:Math.random()*w,y:Math.random()*h,o:Math.random()*6}))};
+    aj();addEventListener("resize",aj);
+    const io=new IntersectionObserver(([e])=>{visible=e.isIntersecting},{threshold:.01});
+    io.observe(c);
+    const f=ts=>{
+      const dt=Math.min(2.5,(ts-(ultimo||ts))/16.7);ultimo=ts;t+=.02*dt;
+      if(visible){
+        const s=v.current;
+        x.fillStyle="rgba(0,2,15,.22)";x.fillRect(0,0,w,h);
+        x.fillStyle="#FF3B3B";x.beginPath();x.arc(50,h/2,9+Math.sin(t*4)*2,0,7);x.fill();
+        ps.forEach(p=>{p.x+=dt*(.3+s*.6);p.y+=Math.sin(t+p.o)*(.3+s*.15)+(h/2-p.y)*.002*s;
+          if(p.x>w){p.x=50;p.y=h/2+(Math.random()-.5)*30}
+          const k=Math.max(0,1-(p.x-50)/w);x.fillStyle=k>.6?"#FF3B3B":"#2A86DA";x.globalAlpha=.4+k*.5;x.beginPath();x.arc(p.x,p.y,2,0,7);x.fill();x.globalAlpha=1});
+      }
+      raf=requestAnimationFrame(f);
+    };
+    if(quieto()){const s=v.current;x.fillStyle="#00020F";x.fillRect(0,0,w,h);return()=>{io.disconnect();removeEventListener("resize",aj)}}
+    raf=requestAnimationFrame(f);
+    return()=>{cancelAnimationFrame(raf);io.disconnect();removeEventListener("resize",aj)};
+  },[]);
+  return <canvas ref={ref} className="viento" aria-label="Simulación del flujo de aire"/>;
+}
+
+/* ===== Llama ===== */
+const Llama=({tierra,k=1,op=1})=><div className="llama-caja" style={{"--k":k,"--op":op}}>
+  <div className={"llama "+(tierra?"t":"e")}/>
+</div>;
+
+/* ===== Navegación ===== */
+function Cabecera({ruta,menu,buscar}){
+  const g=GRUPO[ruta]||ruta;
+  const it=[["intro","Introducción"],["riesgos","Riesgos"],["viento","Dashboard"],["historia","Historia"]];
+  const [peg,setPeg]=useState(false);
+  useEffect(()=>{const f=()=>setPeg(scrollY>24);addEventListener("scroll",f,{passive:true});f();return()=>removeEventListener("scroll",f)},[]);
+  return <header className={"top "+(ruta==="inicio"?"sobre":"solido")+(peg?" pegado":"")}>
+    <button className="burger" onClick={menu} aria-label="Abrir menú"><i/><i/><i/></button>
+    <L to="inicio" className="logo">Fuego<br/>en el espacio</L>
+    <nav aria-label="Principal">{it.map(([id,t])=><L key={id} to={id} className={id===g?"on":""}>{t}</L>)}</nav>
+    <button className="lupa" onClick={buscar} aria-label="Buscar"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.6"><circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/></svg></button>
+  </header>;
+}
+function Menu({cerrar}){
+  return <div className="capa" role="dialog" aria-label="Menú"><button className="cerrar" onClick={cerrar} aria-label="Cerrar">×</button>
+    <div className="mapa-menu">{MENU.map(([t,ids],i)=><div key={t} className="rev vis" style={{transitionDelay:(i*45)+"ms"}}><h3>{t}</h3>{ids.map(x=><L key={x} to={x} onClick={cerrar}>{TITULO[x]}</L>)}</div>)}</div></div>;
+}
+function Buscar({cerrar}){
+  const [q,setQ]=useState("");const ref=useRef();useEffect(()=>ref.current.focus(),[]);
+  const res=ORDEN.filter(i=>(TITULO[i]+" "+(CLAVES[i]||"")).toLowerCase().includes(q.toLowerCase()));
+  return <div className="capa" role="dialog" aria-label="Buscar"><button className="cerrar" onClick={cerrar} aria-label="Cerrar">×</button>
+    <div className="buscar"><input ref={ref} value={q} onChange={e=>setQ(e.target.value)} placeholder="Buscar en el sitio" aria-label="Buscar"/>
+      {res.map(i=><L key={i} to={i} onClick={cerrar}>{TITULO[i]}<small>{PADRE[i]||"Sección"}</small></L>)}
+      {!res.length&&<p style={{marginTop:"1.5rem",color:"#B0B0B2"}}>Sin resultados. Prueba con “humo”, “oxígeno” o “sensor”.</p>}</div></div>;
+}
+function Pie({ruta}){
+  const i=ORDEN.indexOf(ruta),a=ORDEN[i-1],s=ORDEN[i+1];
+  return <div className="nav-pag">{a?<L to={a} className="btn bo">← {TITULO[a]}</L>:<span/>}{s?<L to={s} className="btn">{TITULO[s]} →</L>:<L to="inicio" className="btn">Volver al inicio</L>}</div>;
+}
+const Cruce=({texto,to,boton})=><div className="cruce"><span>{texto}</span><L to={to} className="btn az">{boton}</L></div>;
+const Pagina=({ruta,children})=><><section className="banda"><small>{PADRE[ruta]||"Fuego en el espacio"}</small><h1>{TITULO[ruta]}</h1></section><div className="contenido">{children}<Pie ruta={ruta}/></div></>;
+
+/* ===== Inicio ===== */
+function Inicio(){
+  const [t,setT]=useState(false);
+  return <>
+    <section className="hero"><Cinta/>
+      <div className="hero-txt"><h1>Descifrando cómo arde el fuego sin gravedad</h1>
+        <p>Sin convección, la llama cambia de forma y se vuelve difícil de detectar. Explora los riesgos, los datos y las soluciones.</p>
+        <L to="viento" className="cta">Explorar el dashboard <span aria-hidden="true">→</span></L></div>
+    </section>
+    <section className="tend"><b>TEMAS EN<br/>TENDENCIA</b>
+      {TENDENCIA.map(([id,tx],k)=><L key={id} to={id} className="rev" style={{transitionDelay:(k*70)+"ms"}}><span>{k+1}</span><div>{tx}</div></L>)}
+    </section>
+    <section className="demo">
+      <Rev><h2 style={{fontSize:"2.4rem"}}>Una llama, dos mundos</h2>
+        <p className="lead" style={{marginTop:"1rem"}}>En la Tierra el aire caliente sube y estira la llama. En microgravedad no hay esa corriente y el fuego se vuelve una esfera.</p>
+        <div className="fila"><button className={"chip"+(!t?" on":"")} onClick={()=>setT(false)}>Microgravedad</button><button className={"chip"+(t?" on":"")} onClick={()=>setT(true)}>Tierra</button></div>
+        <L to="intro" className="btn">Leer la introducción</L></Rev>
+      <Rev delay={120} className="escena"><small>{t?"Tierra":"Microgravedad"}</small><Llama tierra={t}/></Rev>
+    </section></>;
+}
+function Intro(){return <Pagina ruta="intro">
+  <p className="lead">En la Tierra el aire caliente sube y alimenta la llama con aire nuevo. En una nave no existe esa corriente: el fuego es más lento, más frío y más difícil de ver. Por eso se estudia con tanto cuidado.</p>
+  <div className="grid">{[["riesgos","Prioridades de riesgo","Ordena las amenazas y obtén una recomendación."],["viento","Dashboard","Explora los datos de forma interactiva."],["historia","Historia","Los incidentes que cambiaron las normas."]].map(([to,h,p],i)=><Rev key={to} delay={i*80}><L to={to} className="card"><h3>{h}</h3><p className="suave">{p}</p></L></Rev>)}</div></Pagina>}
+
+function Riesgos({riesgos,setR}){
+  const orden=useMemo(()=>[...riesgos].sort((a,b)=>b.p*b.i-a.p*a.i),[riesgos]);
+  const cambia=(n,k,v)=>setR(riesgos.map(r=>r.n===n?{...r,[k]:+v}:r));
+  return <Pagina ruta="riesgos"><p className="lead">Ajusta la probabilidad y el impacto de cada riesgo. La lista se reordena sola.</p>
+    {orden.map((r,i)=><Rev key={r.n} delay={i*60}><div className={"card"+(i===0?" top1":"")}><h3>{i+1}. {r.n} <span className="suave" style={{fontSize:"1rem"}}>({r.p*r.i}/100)</span></h3>
+      <div className="barra"><i style={{width:r.p*r.i+"%"}}/></div>
+      <div className="grid"><label>Probabilidad: {r.p}<input type="range" min="1" max="10" value={r.p} onChange={e=>cambia(r.n,"p",e.target.value)}/></label>
+      <label>Impacto: {r.i}<input type="range" min="1" max="10" value={r.i} onChange={e=>cambia(r.n,"i",e.target.value)}/></label></div></div></Rev>)}
+    <div className="fila"><L to="recomendacion" className="btn">Ver recomendación</L><L to="prototipos" className="btn az">Extintores y agentes</L></div></Pagina>;
+}
+function Recomendacion({riesgos}){
+  const top=[...riesgos].sort((a,b)=>b.p*b.i-a.p*a.i)[0];const [h,setH]=useState({});
+  const n=top.ac.filter(a=>h[top.n+a]).length;
+  return <Pagina ruta="recomendacion"><p className="lead">Según tus valores, el riesgo número uno es <b style={{color:"#FF3B3B"}}>{top.n}</b>.</p>
+    <div className="card azul"><h3>Qué hacer</h3><p>{top.r}</p></div>
+    <div className="card"><h3>Plan de acción</h3>{top.ac.map(a=><label key={a} className="check"><input type="checkbox" checked={!!h[top.n+a]} onChange={e=>setH({...h,[top.n+a]:e.target.checked})}/>{a}</label>)}
+      <div className="barra az" style={{marginTop:"1rem"}}><i style={{width:n/top.ac.length*100+"%"}}/></div><p className="suave">{n} de {top.ac.length} completadas</p></div></Pagina>;
+}
+
+/* ===== Extintores: simulador + agentes ===== */
+function Ficha({x,abierto,onToggle}){
+  return <div className={"ficha"+(abierto?" ab":"")}>
+    <button className="ficha-cab" onClick={onToggle} aria-expanded={abierto}>
+      <b>{x.n}</b><span className="mas" aria-hidden="true">{abierto?"−":"+"}</span>
+    </button>
+    <div className="ficha-cuerpo"><div>
+      <p className="suave">{x.r}</p>
+      <ul className="lista">{x.p.map(t=><li key={t}>{t}</li>)}</ul>
+    </div></div>
+  </div>;
+}
+function Prototipos(){
+  const [i,setI]=useState(0),[p,setP]=useState(0),[c,setC]=useState(false),[ab,setAb]=useState(0);
+  useEffect(()=>{if(!c)return;if(quieto()){setP(1);setC(false);return}
+    const ini=performance.now(),d=PROTOS[i].t*1000;let r;
+    const f=n=>{const k=Math.min(1,(n-ini)/d);setP(k);if(k<1)r=requestAnimationFrame(f);else setC(false)};r=requestAnimationFrame(f);return()=>cancelAnimationFrame(r)},[c,i]);
+  const el=k=>{setI(k);setP(0);setC(false)};
+  return <Pagina ruta="prototipos">
+    <p className="lead">Los extintores de una nave no pueden ser tóxicos ni dejar residuos. Elige un agente, pruébalo sobre la llama y revisa cómo se ha usado realmente a bordo.</p>
+    <div className="escena" style={{marginBottom:"1rem"}}><small>{p>=1?"Llama apagada en "+PROTOS[i].t+" s":c?"Apagando…":"Llama encendida"}</small><Llama tierra k={1-p*.85} op={1-p*.55}/></div>
+    {PROTOS.map((x,k)=><button key={x.n} className={"sel"+(k===i?" on":"")} onClick={()=>el(k)}><b>{x.n}</b><div className="suave">{x.d}</div></button>)}
+    <div className="fila"><button className="btn" disabled={c} onClick={()=>{setP(0);setC(true)}}>Probar</button><button className="btn bo" onClick={()=>el(i)}>Reiniciar</button></div>
+
+    <h2 className="sub">Agentes y sistemas de extinción</h2>
+    <p className="suave">Del agua nebulizada al venteo al vacío: lo que se ha probado y lo que se usa hoy.</p>
+    <div className="fichas">{EXTINTORES.map((x,k)=><Rev key={x.n} delay={k*55}><Ficha x={x} abierto={ab===k} onToggle={()=>setAb(ab===k?-1:k)}/></Rev>)}</div>
+
+    <h2 className="sub">Experimentos que lo demostraron</h2>
+    <div className="grid">{EXPERIMENTOS.map((x,k)=><Rev key={x.n} delay={k*70}><div className="card"><h3>{x.n}</h3><p className="suave">{x.d}</p></div></Rev>)}</div>
+    <Cruce texto="Estos protocolos nacen de incendios reales." to="historia" boton="Ir a Historia"/></Pagina>;
+}
+
+/* ===== Dashboard ===== */
+const TABS=[["Fuego en microgravedad",["viento","oxigeno","sensores","comparacion"]],["Datos de la investigación",["investigaciones","pruebas","ambiente","mediciones","publicaciones"]]];
+function Dash({ruta,children}){
+  return <Pagina ruta={ruta}>
+    <div className="tabs">{TABS.map(([g,ts])=><div className="tabgrupo" key={g}>
+      <small>{g}</small><div className="fila">{ts.map(t=><L key={t} to={t} className={"chip"+(ruta===t?" on":"")}>{TITULO[t]}</L>)}</div>
+    </div>)}</div>
+    <div className="pestana" key={ruta}>{children}</div>
+    <Cruce texto="¿Cómo empezó todo? Revisa los hitos históricos." to="historia" boton="Ir a Historia"/></Pagina>;
+}
+function VientoP(){const [v,setV]=useState(4);
+  return <div><p className="lead">Con poca ventilación el humo se queda cerca de la llama. Sube la velocidad para ver cómo se dispersa.</p><Viento vel={v}/>
+    <label style={{display:"block",marginTop:"1rem"}}>Ventilación: {v}<input type="range" min="0" max="10" value={v} onChange={e=>setV(+e.target.value)}/></label></div>}
+function OxigenoP(){
+  const [o,setO]=useState(21);
+  const e=o<16?["No se sostiene la llama","#0563B5"]:o<=23?["Combustión normal","#4A4F63"]:["Riesgo alto: arde muy rápido","#FF3B3B"];
+  const k=Math.max(0,Math.min(1.35,(o-14)/7));
+  return <div><div className="escena" style={{marginBottom:"1rem"}}><small>{o}% de O₂</small><Llama tierra k={k} op={o<16?.3:1}/></div>
+    <label>Oxígeno: {o}%<input type="range" min="14" max="35" value={o} onChange={x=>setO(+x.target.value)}/></label>
+    <div className="barra" style={{margin:".8rem 0"}}><i style={{width:(o-14)/21*100+"%",background:e[1]}}/></div>
+    <p><b style={{color:e[1]}}>{e[0]}</b>. El aire normal tiene cerca de 21%.</p></div>;
+}
+function SensoresP(){
+  const [i,setI]=useState(0),s=SENS[i];
+  return <div className="grid" style={{gridTemplateColumns:"1fr 1.2fr"}}><div>{SENS.map((x,k)=><button key={x.n} className={"sel az"+(k===i?" on":"")} onClick={()=>setI(k)}>{x.n}</button>)}</div>
+    <div className="card" key={s.n}><h3>{s.n}</h3><p className="suave">{s.d}</p>{["Rapidez","Cobertura","Falsas alarmas"].map((l,k)=><div key={l} style={{margin:".8rem 0"}}><small className="suave">{l}: {s.v[k]}</small><div className={"barra"+(k<2?" az":"")}><i style={{width:s.v[k]+"%"}}/></div></div>)}<small className="suave">Valores ilustrativos.</small></div></div>;
+}
+function ComparacionP(){
+  const [f,setF]=useState("t");const fs=COMP.filter(r=>f==="t"||r[0]===f);
+  return <div><div className="fila">{[["t","Todo"],["s","Similitudes"],["d","Diferencias"]].map(([k,t])=><button key={k} className={"chip"+(f===k?" on":"")} onClick={()=>setF(k)}>{t}</button>)}</div>
+    <div style={{overflowX:"auto"}}><table><thead><tr><th></th><th>Tierra</th><th>Espacio</th></tr></thead><tbody>{fs.map(r=><tr key={r[1]}><td><span className={"tag "+r[0]}>{r[0]==="s"?"Igual":"Distinto"}</span><br/><b>{r[1]}</b></td><td>{r[2]}</td><td>{r[3]}</td></tr>)}</tbody></table></div></div>;
+}
+
+/* --- Datos: investigaciones --- */
+function InvestigacionesP(){
+  const [area,setArea]=useState("Todas");
+  const lista=INV.filter(x=>area==="Todas"||x.area===area);
+  const total=INV.length,curso=INV.filter(x=>x.est==="En curso").length,plan=INV.filter(x=>x.est==="Planificada").length;
+  const plats=[...new Set(INV.map(x=>x.plat))];
+  const cuenta=AREAS.map(a=>({n:a,v:INV.filter(x=>x.area===a).length,c:area===a?"rojo":""}));
+  const izq=(a,b)=>(a-ANIO0)/(ANIO1-ANIO0)*100;
+  return <div>
+    <p className="lead">Volumen y estado de las investigaciones por área principal y plataforma de ejecución, con su cronograma.</p>
+    <div className="kpis">
+      <Kpi v={total} e="Investigaciones" nota="total registrado"/>
+      <Kpi v={total-curso-plan} e="Completadas"/>
+      <Kpi v={curso} e="En curso"/>
+      <Kpi v={plats.length} e="Plataformas" nota={plats.join(" · ")}/>
+    </div>
+    <div className="grid dos"><div className="card"><h3>Por área principal</h3>
+      <Barras datos={cuenta}/></div>
+      <div className="card"><h3>Por plataforma</h3>
+      <Barras datos={plats.map(p=>({n:p,v:INV.filter(x=>x.plat===p).length}))}/></div></div>
+
+    <div className="fila" role="group" aria-label="Filtrar por área">{["Todas",...AREAS].map(a=><button key={a} className={"chip"+(area===a?" on":"")} onClick={()=>setArea(a)}>{a}</button>)}</div>
+
+    <div className="card"><h3>Cronograma <small className="suave">({lista.length})</small></h3>
+      <div className="eje"><span>{ANIO0}</span><span>2010</span><span>2018</span><span>{ANIO1}</span></div>
+      <div className="tl-datos" key={area}>{lista.map(x=>{
+        const i0=izq(x.ini),w=Math.max(1.8,izq(x.fin,x.fin)-i0+(x.fin===x.ini?.9:0));
+        return <div className="fila-t" key={x.n}>
+          <span>{x.n}</span>
+          <div className="linea"><i style={{left:i0+"%",width:w+"%"}} className={x.est==="En curso"?"rojo":x.est==="Planificada"?"gris":""}/>
+            <em>{x.ini}–{x.fin}</em></div>
+        </div>;
+      })}</div>
+      <div className="leyenda"><span><i className="az"/>Completada</span><span><i className="rojo"/>En curso</span><span><i className="gris"/>Planificada</span></div>
+    </div>
+    <p className="nota">Datos de ejemplo construidos sobre el esquema real (investigations, tests, measurements, documents, publications).</p>
+  </div>;
+}
+
+/* --- Datos: pruebas --- */
+function PruebasP(){
+  const [clase,setClase]=useState("Todas");
+  const lista=PRUEBAS.filter(p=>clase==="Todas"||p.clase===clase);
+  const total=lista.length;
+  const ext=lista.filter(p=>p.out==="Extinguida").length;
+  const ign=lista.filter(p=>p.ign).length;
+  const conFuego=lista.filter(p=>p.burn>0);
+  const media=conFuego.length?conFuego.reduce((s,p)=>s+p.burn,0)/conFuego.length:0;
+  const outs=["Extinguida","Propagación","Sin ignición"];
+  const colors={Extinguida:"",Propagación:"rojo","Sin ignición":"gris"};
+  return <div>
+    <p className="lead">Rendimiento de los experimentos: tipo y clase de combustible, ignición, resultado y tiempo de combustión.</p>
+    <div className="fila" role="group" aria-label="Filtrar por clase de combustible">{["Todas","A","B"].map(c=><button key={c} className={"chip"+(clase===c?" on":"")} onClick={()=>setClase(c)}>{c==="Todas"?"Todas las clases":"Clase "+c}</button>)}</div>
+    <div className="kpis">
+      <Kpi v={total} e="Pruebas"/>
+      <Kpi v={total?ext/total*100:0} suf="%" e="Extinguidas"/>
+      <Kpi v={media} dec={1} suf=" s" e="Combustión media"/>
+      <Kpi v={ign} e="Con ignición" nota={total-ign+" sin ignición"}/>
+    </div>
+    <div className="grid dos"><div className="card"><h3>Resultado</h3>
+      <Barras datos={outs.map(o=>({n:o,v:lista.filter(p=>p.out===o).length,c:colors[o]}))}/></div>
+      <div className="card"><h3>Tiempo de combustión por prueba</h3>
+      <Barras datos={conFuego.map(p=>({n:p.id,v:p.burn,t:p.burn+" s"}))}/></div></div>
+    <div className="card"><h3>Detalle de pruebas</h3>
+      <div style={{overflowX:"auto"}}><table><thead><tr><th>Prueba</th><th>Combustible</th><th>Clase</th><th>Ignición</th><th>Resultado</th><th>Tiempo</th></tr></thead>
+      <tbody>{lista.map(p=><tr key={p.id}><td><b>{p.id}</b></td><td>{p.fuel}</td><td>{p.clase}</td>
+        <td><span className={"punto"+(p.ign?" on":"")}/>{p.ign?"Sí":"No"}</td>
+        <td><span className={"tag "+(p.out==="Extinguida"?"s":p.out==="Propagación"?"d":"n")}>{p.out}</span></td>
+        <td>{p.burn?p.burn+" s":"—"}</td></tr>)}</tbody></table></div></div>
+    <p className="nota">Datos de ejemplo sobre las columnas fuel, fuel_class, ignited, outcome y burn_time_s.</p>
+  </div>;
+}
+
+/* --- Datos: ambiente operativo --- */
+function AmbienteP(){
+  const [m,setM]=useState("pres"),r=RANGOS[m];
+  return <div>
+    <p className="lead">Presión, flujo y concentración de oxígeno bajo los que operan los experimentos. Cada barra es el rango registrado.</p>
+    <div className="fila" role="group" aria-label="Métrica ambiental">{Object.entries(RANGOS).map(([k,x])=><button key={k} className={"chip"+(m===k?" on":"")} onClick={()=>setM(k)}>{x.t}</button>)}</div>
+    <div className="card"><h3>{r.t} <small className="suave">({r.u})</small></h3>
+      <div className="barras" key={m}>{AMB.map(a=>{
+        const [lo,hi]=a[m];
+        return <div className="fila-b" key={a.n}><span>{a.n}</span>
+          <div className="pista rango"><i style={{left:(lo/r.max*100)+"%",width:Math.max(1,(hi-lo)/r.max*100)+"%"}}/></div>
+          <b>{lo}–{hi}</b></div>;
+      })}</div>
+      <div className="eje"><span>0</span><span>{Math.round(r.max/2)}</span><span>{r.max} {r.u}</span></div>
+    </div>
+    <p className="nota">Rangos ilustrativos sobre pressure_kpa, flow_min_cm_s, flow_max_cm_s, o2_min y o2_max.</p>
+  </div>;
+}
+
+/* --- Datos: mediciones --- */
+function MedicionesP(){
+  const [q,setQ]=useState(MEDICIONES[0].q);
+  const m=MEDICIONES.find(x=>x.q===q);
+  const vals=m.v.map(x=>x[0]),max=Math.max(...vals);
+  const min=Math.min(...vals),media=vals.reduce((a,b)=>a+b,0)/vals.length;
+  return <div>
+    <p className="lead">Resultados exactos por prueba, agrupados por tipo de medición, valor y unidad.</p>
+    <div className="fila" role="group" aria-label="Tipo de medición">{MEDICIONES.map(x=><button key={x.q} className={"chip"+(q===x.q?" on":"")} onClick={()=>setQ(x.q)}>{x.q}</button>)}</div>
+    <div className="kpis">
+      <Kpi v={min} dec={min%1?2:0} suf={" "+m.u} e="Mínimo"/>
+      <Kpi v={media} dec={1} suf={" "+m.u} e="Media"/>
+      <Kpi v={max} dec={max%1?2:0} suf={" "+m.u} e="Máximo"/>
+      <Kpi v={vals.length} e="Mediciones"/>
+    </div>
+    <div className="card"><h3>{q} <small className="suave">({m.u})</small></h3>
+      <div className="barras" key={q}>{m.v.slice().sort((a,b)=>b[0]-a[0]).map(([v,id])=><div className="fila-b" key={id}>
+        <span>{id}</span><div className="pista"><i style={{width:(v/max*100)+"%"}}/></div><b>{v}</b></div>)}</div>
+    </div>
+    <p className="nota">Cada fila emula un registro de measurements: prueba, quantity, value y unit.</p>
+  </div>;
+}
+
+/* --- Datos: documentos y publicaciones --- */
+function PublicacionesP(){
+  const totalPub=PUBLICACIONES.reduce((s,[,n])=>s+n,0),maxPub=Math.max(...PUBLICACIONES.map(([,n])=>n));
+  const totalDoc=DOC_EST.reduce((s,[,n])=>s+n,0),pub=DOC_EST[0][1];
+  return <div>
+    <p className="lead">Cuánto se publica y en qué estado está el procesamiento de documentos, para medir el impacto científico de cada experimento.</p>
+    <div className="kpis">
+      <Kpi v={totalPub} e="Publicaciones"/>
+      <Kpi v={totalDoc} e="Documentos"/>
+      <Kpi v={pub/totalDoc*100} suf="%" e="Publicados"/>
+      <Kpi v={totalDoc-pub} e="En proceso"/>
+    </div>
+    <div className="card"><h3>Publicaciones por año</h3>
+      <div className="vbarras">{PUBLICACIONES.map(([y,n])=><div className="vb" key={y}>
+        <div className="vcol"><i style={{height:(n/maxPub*100)+"%"}}/></div>
+        <b>{n}</b><small>{y}</small></div>)}</div>
+    </div>
+    <div className="grid dos"><div className="card"><h3>Estado de documentos</h3>
+      <Barras datos={DOC_EST.map(([n,v],i)=>({n,v,c:i===0?"":i===1?"rojo":"gris"}))}/></div>
+      <div className="card"><h3>Tipo de documento</h3>
+      <Barras datos={DOC_TIPO.map(([n,v])=>({n,v}))}/></div></div>
+    <p className="nota">Refleja el volumen de publications y los campos status y doc_type de documents.</p>
+  </div>;
+}
+
+/* ===== Reproductor de YouTube (IFrame Player API) ===== */
+let ytPromesa=null;
+function cargarYT(){
+  if(ytPromesa)return ytPromesa;
+  ytPromesa=new Promise(res=>{
+    if(window.YT&&window.YT.Player)return res();
+    const prev=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{typeof prev==="function"&&prev();res()};
+    const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";s.async=true;
+    s.onerror=()=>res();document.head.appendChild(s);
+  });
+  return ytPromesa;
+}
+function Video({v,activo,onPlay,onCerrar}){
+  const host=useRef(null),pl=useRef(null);
+  useEffect(()=>{
+    if(!activo)return;
+    let vivo=true;
+    cargarYT().then(()=>{
+      if(!vivo||!host.current||!window.YT||!window.YT.Player)return;
+      host.current.innerHTML="";
+      const d=document.createElement("div");host.current.appendChild(d);
+      pl.current=new window.YT.Player(d,{videoId:v.id,playerVars:{autoplay:1,rel:0,modestbranding:1,playsinline:1},
+        events:{onReady:e=>{if(vivo)e.target.playVideo()}}});
+    }).catch(()=>{});
+    return()=>{vivo=false;try{pl.current&&pl.current.destroy()}catch(e){}pl.current=null};
+  },[activo,v.id]);
+  return <article className={"video"+(activo?" on":"")}>
+    <div className="marco">
+      {activo?<div className="yt" ref={host}/>:
+        <button className="poster" onClick={onPlay} aria-label={"Reproducir: "+v.t}>
+          <img src={"https://i.ytimg.com/vi/"+v.id+"/hqdefault.jpg"} alt="" loading="lazy" onError={e=>{e.currentTarget.style.visibility="hidden"}}/>
+          <span className="play" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg></span>
+          <span className="eti">YouTube</span>
+        </button>}
+    </div>
+    <div className="video-pie"><h4>{v.t}</h4><small>{v.c}</small>
+      {activo?<button className="cerrar-v" onClick={onCerrar}>Cerrar reproductor</button>
+        :<a className="abrir" href={"https://www.youtube.com/watch?v="+v.id} target="_blank" rel="noreferrer">Ver en YouTube ↗</a>}
+    </div>
+  </article>;
+}
+function VideoGrid({lista}){
+  const [act,setAct]=useState(null);
+  return <div className="videos">{lista.map((v,i)=><Rev key={v.id} delay={i%3*70}><Video v={v} activo={act===v.id} onPlay={()=>setAct(v.id)} onCerrar={()=>setAct(null)}/></Rev>)}</div>;
+}
+
+function Historia(){
+  const [a,setA]=useState(0);
+  return <Pagina ruta="historia">
+    <p className="lead">Toca un hito para abrirlo y sigue la historia en los documentales, sin salir del sitio.</p>
+    <div className="tl">{HITOS.map((h,k)=><Rev key={h[1]} delay={k*50} className={""}><button className={"hito"+(a===k?" on":"")} onClick={()=>setA(k)} aria-expanded={a===k}><b><em>{h[0]}</em>{h[1]}</b><p>{h[2]}</p></button></Rev>)}</div>
+
+    <h2 className="sub">Lecciones del Apolo 1</h2>
+    <p className="suave">El incendio de 1967 en la plataforma de lanzamiento redefinió los materiales, la escotilla y la atmósfera de las cápsulas.</p>
+    <VideoGrid lista={V_APOLO1}/>
+
+    <h2 className="sub">Lecciones del Apolo 13</h2>
+    <p className="suave">El oxígeno y la energía a bordo quedaron al límite; el control de misión convirtió una avería en un regreso seguro.</p>
+    <VideoGrid lista={V_APOLO13}/>
+
+    <h2 className="sub">Canales institucionales</h2>
+    <div className="grid canales">{CANALES.map((c,i)=><Rev key={c.n} delay={i*80}><a className="card canal" href={c.u} target="_blank" rel="noreferrer"><h3>{c.n}</h3><p className="suave">{c.d}</p><span className="abrir">youtube.com ↗</span></a></Rev>)}</div>
+
+    <Cruce texto="Mira los datos que usamos hoy para evitar estos casos." to="viento" boton="Ir al Dashboard"/></Pagina>;
+}
+
+/* ===== App ===== */
+function App(){
+  const ruta=useRuta(),[riesgos,setR]=useState(RIESGOS0),[capa,setCapa]=useState(null);
+  useEffect(()=>{const f=e=>e.key==="Escape"&&setCapa(null);addEventListener("keydown",f);return()=>removeEventListener("keydown",f)},[]);
+  /* Revela los elementos marcados con .rev que no usan el componente Rev */
+  useEffect(()=>{
+    const els=[...document.querySelectorAll(".rev:not(.vis)")];
+    if(!els.length)return;
+    if(quieto()||!("IntersectionObserver" in window)){els.forEach(e=>e.classList.add("vis"));return}
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("vis");io.unobserve(e.target)}}),{threshold:.05});
+    els.forEach(e=>io.observe(e));
+    return()=>io.disconnect();
+  },[ruta]);
+  let v;
+  switch(ruta){
+    case "inicio":v=<Inicio/>;break;
+    case "intro":v=<Intro/>;break;
+    case "riesgos":v=<Riesgos riesgos={riesgos} setR={setR}/>;break;
+    case "recomendacion":v=<Recomendacion riesgos={riesgos}/>;break;
+    case "prototipos":v=<Prototipos/>;break;
+    case "viento":v=<Dash ruta={ruta}><VientoP/></Dash>;break;
+    case "oxigeno":v=<Dash ruta={ruta}><OxigenoP/></Dash>;break;
+    case "sensores":v=<Dash ruta={ruta}><SensoresP/></Dash>;break;
+    case "comparacion":v=<Dash ruta={ruta}><ComparacionP/></Dash>;break;
+    case "investigaciones":v=<Dash ruta={ruta}><InvestigacionesP/></Dash>;break;
+    case "pruebas":v=<Dash ruta={ruta}><PruebasP/></Dash>;break;
+    case "ambiente":v=<Dash ruta={ruta}><AmbienteP/></Dash>;break;
+    case "mediciones":v=<Dash ruta={ruta}><MedicionesP/></Dash>;break;
+    case "publicaciones":v=<Dash ruta={ruta}><PublicacionesP/></Dash>;break;
+    default:v=<Historia/>;
+  }
+  return <>
+    <Progreso/>
+    <Cabecera ruta={ruta} menu={()=>setCapa("menu")} buscar={()=>setCapa("buscar")}/>
+    <main key={ruta}>{v}</main>
+    {capa==="menu"&&<Menu cerrar={()=>setCapa(null)}/>}
+    {capa==="buscar"&&<Buscar cerrar={()=>setCapa(null)}/>}
+  </>;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
 </html>
