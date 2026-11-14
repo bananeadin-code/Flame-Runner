@@ -1,5 +1,3 @@
-"""Configuración leída de variables de entorno (.env)."""
-
 import os
 from dataclasses import dataclass, field
 from pathlib import Path

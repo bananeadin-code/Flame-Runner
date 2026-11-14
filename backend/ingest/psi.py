@@ -1,15 +1,3 @@
-"""Catálogo y descarga de las investigaciones de Combustion Science del NASA PSI.
-
-Uso (desde la raíz del repo):
-    python -m backend.ingest.psi catalog            # metadatos + inventario de archivos
-    python -m backend.ingest.psi download           # descarga los archivos seleccionados
-    python -m backend.ingest.psi download --tier context --max-mb 200
-    python -m backend.ingest.psi download --only PSI-25 PSI-69
-
-Usa la API pública del repositorio PSI (la misma que usa su web). No requiere cuenta.
-La descarga se puede interrumpir y reanudar: los archivos ya completos se saltan.
-"""
-
 import argparse
 import csv
 import json
@@ -26,7 +14,6 @@ API = "https://psi.nasa.gov/geode-py/ws"
 OUT = ROOT_DIR / "resources" / "psi"
 INVENTORY = OUT / "inventory.csv"
 
-# Prioridad de cada categoría de PSI. "raw" (vídeo, imágenes, telemetría cruda) suma ~6 TB.
 TIERS = {
     "Experimental table": "core",
     "Reports": "core",
@@ -41,7 +28,6 @@ TIERS = {
 }
 TIER_ORDER = {"core": 0, "context": 1, "raw": 2}
 USEFUL_EXT = {"pdf", "csv", "xls", "xlsx", "txt", "dat", "doc", "docx", "rtf", "ppt", "pptx", "zip", "json", "xml"}
-# En las investigaciones antiguas (FLEX, BASS...) los artículos e informes están dentro de "Raw Data".
 DOC_EXT = {"pdf", "doc", "docx", "rtf", "ppt", "pptx", "xls", "xlsx"}
 
 
@@ -65,7 +51,6 @@ def _save_json(path: Path, data) -> None:
 
 
 def _current_files(versions: list[dict]) -> dict[str, dict]:
-    """Aplica en orden los 'added'/'removed' de cada versión para obtener los archivos vigentes."""
     files: dict[str, dict] = {}
     for v in sorted(versions, key=lambda v: v["version"]):
         for f in v.get("added") or []:
@@ -76,7 +61,6 @@ def _current_files(versions: list[dict]) -> dict[str, dict]:
 
 
 def catalog() -> None:
-    """Descarga los metadatos de las investigaciones y genera inventory.csv."""
     hits = _get(f"{API}/repo/search", ffield="Research Area", fvalue="Combustion Science", size=500).json()
     accessions = sorted(
         (h["_source"]["Accession"] for h in hits["hits"]["hits"] if h["_index"] == "investigation"),
@@ -88,11 +72,11 @@ def catalog() -> None:
     rows = []
     for acc in accessions:
         detail = _get(f"{API}/repo/investigations/{acc}").json()
-        detail.pop("added", None)  # la lista de archivos sale de las versiones
+        detail.pop("added", None)
         _save_json(OUT / "investigations" / f"{acc}.json", detail)
         versions = _get(f"{API}/repo/investigations/{acc}/versions").json()["versions"]
         for f in _current_files(versions).values():
-            parts = f["remote_path"].split("/")  # /Home/psi-data/PSI-25/<categoria>/...
+            parts = f["remote_path"].split("/")
             category = parts[4] if len(parts) > 5 else ""
             ext = f["file_name"].rsplit(".", 1)[-1].lower() if "." in f["file_name"] else ""
             rows.append({
@@ -125,7 +109,7 @@ def _select(tier: str, max_mb: float, only: list[str] | None) -> list[dict]:
     limit = TIER_ORDER[tier]
     selected, seen = [], set()
     for r in rows:
-        key = (r["accession"], r["file_name"], r["size_bytes"])  # mismo archivo en otra carpeta/versión
+        key = (r["accession"], r["file_name"], r["size_bytes"])
         if (
             TIER_ORDER[r["tier"]] <= limit
             and r["ext"] in USEFUL_EXT
@@ -177,7 +161,7 @@ def download(tier: str, max_mb: float, only: list[str] | None, workers: int) -> 
             r = futures[fut]
             try:
                 counts[fut.result()] += 1
-            except Exception as exc:  # se informa y se sigue con el resto
+            except Exception as exc:
                 counts["error"] += 1
                 print(f"  ERROR {r['accession']} {r['file_name']}: {exc}")
             if i % 25 == 0 or i == len(selected):
@@ -186,7 +170,7 @@ def download(tier: str, max_mb: float, only: list[str] | None, workers: int) -> 
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p = argparse.ArgumentParser(prog="python -m backend.ingest.psi")
     sub = p.add_subparsers(dest="cmd", required=True)
     sub.add_parser("catalog", help="metadatos e inventario de archivos")
     d = sub.add_parser("download", help="descarga los archivos seleccionados del inventario")
