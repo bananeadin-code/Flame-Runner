@@ -85,6 +85,13 @@ export const QUANTITY_LABEL = {
   pressure_max: ["Presión máxima", "Maximum pressure"],
 };
 
+export const AREA_TOPIC = {
+  prevention: ["prevención de incendios", "fire prevention"],
+  detection: ["detección de incendios", "fire detection"],
+  suppression: ["extinción de incendios", "fire suppression"],
+  fundamental: ["ciencia básica de la combustión", "fundamental combustion science"],
+};
+
 export const VARIABLE_LABEL = {
   fuel: ["Combustible", "Fuel"],
   configuration: ["Configuración", "Configuration"],

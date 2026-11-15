@@ -32,18 +32,18 @@ function Headline() {
               <>
                 {tr(
                   <>
-                    <span className="text-rojo">Ninguna</span> de las {solid.tests} pruebas de materiales sólidos en microgravedad se hizo en las condiciones de este escenario.
+                    <span className="text-rojo">Ninguna</span> de las {solid.tests_with_o2} pruebas de materiales sólidos con oxígeno registrado se hizo en las condiciones de este escenario.
                   </>,
                   <>
-                    <span className="text-rojo">None</span> of the {solid.tests} microgravity tests on solid materials was run under this scenario’s conditions.
+                    <span className="text-rojo">None</span> of the {solid.tests_with_o2} solid material tests with recorded oxygen was run under this scenario’s conditions.
                   </>,
                 )}
               </>
             ) : (
               <>
                 {tr(
-                  `${solid?.tests_in_scenario} de ${solid?.tests} pruebas de materiales sólidos cubren las condiciones de este escenario.`,
-                  `${solid?.tests_in_scenario} of ${solid?.tests} solid material tests cover this scenario’s conditions.`,
+                  `${solid?.tests_in_scenario} de ${solid?.tests_with_o2} pruebas de materiales sólidos con oxígeno registrado cubren las condiciones de este escenario.`,
+                  `${solid?.tests_in_scenario} of ${solid?.tests_with_o2} solid material tests with recorded oxygen cover this scenario’s conditions.`,
                 )}
               </>
             )}
@@ -56,13 +56,19 @@ function Headline() {
           </p>
         </Reveal>
         <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {cells.map((c, i) => (
-            <Reveal key={c.fuel_class} delay={i * 80} className={`rounded-xl border p-4 sm:p-5 ${c.tests_in_scenario === 0 ? "border-rojo/60 bg-rojo/10" : "border-white/15 bg-white/5"}`}>
-              <b className={`block font-serif text-4xl ${c.tests_in_scenario === 0 ? "text-rojo" : ""}`}>{c.tests_in_scenario}</b>
-              <span className="mt-1 block text-sm">{label(FUEL_CLASS_LABEL, c.fuel_class)}</span>
-              <small className="text-xs text-white/60">{tr(`de ${c.tests} pruebas`, `of ${c.tests} tests`)}</small>
-            </Reveal>
-          ))}
+          {cells.map((c, i) => {
+            const unknown = c.tests_with_o2 === 0;
+            const empty = !unknown && c.tests_in_scenario === 0;
+            return (
+              <Reveal key={c.fuel_class} delay={i * 80} className={`rounded-xl border p-4 sm:p-5 ${empty ? "border-rojo/60 bg-rojo/10" : "border-white/15 bg-white/5"}`}>
+                <b className={`block font-serif text-4xl ${empty ? "text-rojo" : unknown ? "text-white/40" : ""}`}>{unknown ? "—" : c.tests_in_scenario}</b>
+                <span className="mt-1 block text-sm">{label(FUEL_CLASS_LABEL, c.fuel_class)}</span>
+                <small className="text-xs text-white/60">
+                  {unknown ? tr(`${c.tests} pruebas sin O₂ registrado`, `${c.tests} tests with no O₂ recorded`) : tr(`de ${c.tests_with_o2} pruebas con O₂ registrado`, `of ${c.tests_with_o2} tests with recorded O₂`)}
+                </small>
+              </Reveal>
+            );
+          })}
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link to="riesgos" className="rounded-full bg-rojo px-5 py-2.5 text-sm hover:bg-rojo/85">

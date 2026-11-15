@@ -65,7 +65,10 @@ def score_finding(f: dict, scenario: dict | None) -> dict:
         o2 = cond.get("o2_percent")
         parts["oxygen"] = 0.75 if o2 is None else round(1 - min(abs(o2 / 100 - scenario["o2_fraction"]) / 0.2, 1) * 0.5, 2)
         gravity = cond.get("gravity", "unspecified")
-        parts["gravity"] = 1.0 if gravity == gravity_class(scenario) else 0.8 if gravity in ("unspecified", "microgravity") else 0.6
+        if scenario["gravity_g"] > 0:
+            parts["gravity"] = 0.8
+        else:
+            parts["gravity"] = 1.0 if gravity == "microgravity" else 0.8 if gravity == "unspecified" else 0.6
     score = 1.0
     for value in parts.values():
         score *= value
@@ -242,9 +245,10 @@ def gaps(db: sqlite3.Connection = Depends(get_db)) -> dict:
     for scen in rows(db.execute("SELECT * FROM scenarios")):
         for fuel_class in ("solid", "droplet", "gas", "aerosol"):
             subset = [t for t in all_tests if t["fuel_class"] == fuel_class]
-            matches = [t for t in subset if in_envelope(t, scen)["in_scenario"]]
+            known = [t for t in subset if t["o2_min"] is not None]
+            matches = [t for t in known if in_envelope(t, scen)["in_scenario"]]
             coverage.append({"scenario": scen["id"], "fuel_class": fuel_class, "tests": len(subset),
-                             "tests_in_scenario": len(matches), "gravity_g": scen["gravity_g"]})
+                             "tests_with_o2": len(known), "tests_in_scenario": len(matches), "gravity_g": scen["gravity_g"]})
     top_gaps = {}
     for area in AREAS:
         items = rows(db.execute(
