@@ -10,6 +10,38 @@ import { Chip, ErrorBox, Loading } from "./ui";
 import { pick, tr } from "../lib/i18n";
 import { EXAMPLES } from "../content/narrative";
 import { ScenarioSelect } from "./Layout";
+import { answerImages } from "../lib/images";
+
+function AnswerImages({ answer }) {
+  const images = answerImages(answer);
+  if (!images.length) return null;
+  return (
+    <div className="mt-6">
+      <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gris-oscuro">{tr("Imágenes de referencia", "Reference images")}</h4>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {images.map((m) => (
+          <figure key={m.id} className="min-w-0">
+            <a href={m.src} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg bg-noche">
+              <img src={m.src} alt={pick(m.alt)} loading="lazy" className="aspect-[4/3] w-full object-cover transition duration-500 hover:scale-105" />
+            </a>
+            <figcaption className="mt-1.5 text-xs text-gris-oscuro">
+              {pick(m.alt)}.{" "}
+              <a href={m.url} target="_blank" rel="noreferrer" className="underline decoration-linea underline-offset-2 hover:decoration-noche">
+                {pick(m.credit)} ↗
+              </a>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-gris-oscuro">
+        {tr(
+          "Imágenes ilustrativas de la NASA elegidas según las fuentes citadas y el tema; no forman parte de la evidencia citada.",
+          "Illustrative NASA images chosen from the cited sources and the topic; they are not part of the cited evidence.",
+        )}
+      </p>
+    </div>
+  );
+}
 
 const PROVIDER_LABEL = { local: ["Gemma 4 · servidor del equipo", "Gemma 4 · team server"], anthropic: ["Claude Haiku · respaldo", "Claude Haiku · fallback"] };
 
@@ -144,6 +176,7 @@ function Assistant({ question, scenarioId, area, lang, onReset }) {
               <div className="rounded-xl bg-claro/60 p-4 text-[1.02rem] sm:p-5">
                 <AnswerText text={t.answer.answer} cited={t.answer.cited} onCite={cite} />
               </div>
+              <AnswerImages answer={t.answer} />
               {t.answer.sources.length > 0 && <SourceList sources={t.answer.sources} cited={t.answer.cited} focus={focus} />}
             </div>
           )}

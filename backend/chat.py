@@ -31,7 +31,7 @@ STOPWORDS = {"the", "and", "for", "with", "what", "how", "does", "are", "was", "
              "which", "when", "where", "why", "about", "than", "then", "there", "their", "they", "have", "has"}
 
 GLOSSARY = {
-    "helio": "helium", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
+    "helio": "helium", "forma": "shape", "formas": "shape", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
     "llamas": "flame", "humo": "smoke", "hollin": "soot", "apagar": "extinguish extinction", "apaga": "extinguish extinction",
     "apagan": "extinguish extinction", "extincion": "extinction", "extinguir": "extinguish", "extintor": "extinguisher",
     "supresion": "suppression", "supresor": "suppressant", "supresores": "suppressant", "oxigeno": "oxygen",

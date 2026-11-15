@@ -86,8 +86,7 @@ export default function Inicio() {
         <img src={MEDIA.acmeLlama.src} alt="" className="absolute inset-0 size-full object-cover opacity-50 sm:opacity-70 lg:left-auto lg:w-3/5" />
         <div className="absolute inset-0 bg-gradient-to-r from-noche via-noche/85 to-noche/10" />
         <div className="relative mx-auto w-full max-w-6xl px-4 pt-28 pb-20 sm:px-5 md:px-8">
-          <small className="animate-subir font-serif text-xl tracking-wide text-azul-palido sm:text-2xl">Flame Runner</small>
-          <h1 className="mt-3 max-w-2xl animate-subir text-4xl font-bold sm:text-5xl lg:text-7xl">{tr("Descifrando cómo arde el fuego sin gravedad", "Decoding how fire burns without gravity")}</h1>
+          <h1 className="max-w-2xl animate-subir text-4xl font-bold sm:text-5xl lg:text-7xl">{tr("Descifrando cómo arde el fuego sin gravedad", "Decoding how fire burns without gravity")}</h1>
           <p className="mt-6 max-w-xl animate-subir text-base text-white/85 [animation-delay:120ms] sm:text-lg">
             {tr(
               "Sin convección, la llama cambia de forma y se vuelve difícil de detectar. Explora décadas de experimentos de la NASA en la Estación Espacial, con cada dato respaldado por su fuente original.",
