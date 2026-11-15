@@ -1,3 +1,4 @@
+import logging
 import math
 import re
 import sqlite3
@@ -20,6 +21,7 @@ from .limits import limiter
 from .sources import source_link
 
 router = APIRouter(prefix="/api")
+log = logging.getLogger("uvicorn.error")
 
 MAX_FINDINGS = 12
 MAX_PAGES = 4
@@ -275,7 +277,8 @@ def ask_local(system: str, messages: list[dict], max_tokens: int) -> str:
         content = (choice["message"].get("content") or "").strip()
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
         local_down_until = time.monotonic() + LOCAL_COOLDOWN_S
-        raise LLMUnavailable(f"modelo local: {type(exc).__name__}") from exc
+        detail = f"HTTP {exc.response.status_code}" if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
+        raise LLMUnavailable(f"modelo local: {detail}") from exc
     if not content:
         raise LLMUnavailable("modelo local sin texto: subir LOCAL_LLM_MAX_TOKENS")
     if choice.get("finish_reason") == "length":
@@ -313,6 +316,7 @@ def ask(system: str, messages: list[dict], max_tokens: int) -> tuple[str, str]:
         try:
             return PROVIDERS[name](system, messages, max_tokens), name
         except LLMUnavailable as exc:
+            log.warning("Proveedor %s no disponible: %s", name, exc)
             errors.append(str(exc))
     raise HTTPException(503, "El asistente no está disponible ahora mismo: " + "; ".join(errors))
 
