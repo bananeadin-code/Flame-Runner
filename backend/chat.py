@@ -34,7 +34,7 @@ STOPWORDS = {"the", "and", "for", "with", "what", "how", "does", "are", "was", "
              "which", "when", "where", "why", "about", "than", "then", "there", "their", "they", "have", "has"}
 
 GLOSSARY = {
-    "helio": "helium", "forma": "shape", "formas": "shape", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
+    "helio": "helium", "forma": "shape", "formas": "shape", "enriquecido": "enriched", "enriquecida": "enriched", "enriquecidos": "enriched", "enriquecidas": "enriched", "elevado": "elevated", "elevada": "elevated", "concentracion": "concentration", "atmosfera": "atmosphere", "atmosferas": "atmosphere", "cabina": "cabin", "estable": "steady", "estables": "steady", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
     "llamas": "flame", "humo": "smoke", "hollin": "soot", "apagar": "extinguish extinction", "apaga": "extinguish extinction",
     "apagan": "extinguish extinction", "extincion": "extinction", "extinguir": "extinguish", "extintor": "extinguisher",
     "supresion": "suppression", "supresor": "suppressant", "supresores": "suppressant", "oxigeno": "oxygen",
@@ -148,7 +148,23 @@ def clean_rewrite(raw: str) -> str:
 
 
 def terms(text: str) -> list[str]:
-    return [w[:7] for w in re.findall(r"[a-z0-9]+", text.lower()) if len(w) > 2 and w not in STOPWORDS]
+    return [w[:7] for w in re.findall(r"[a-z0-9]+", text.lower())
+            if (len(w) > 2 or (len(w) == 2 and w.isdigit())) and w not in STOPWORDS]
+
+
+def percents(question: str) -> str:
+    return " ".join(dict.fromkeys(re.findall(r"(\d{1,2})(?:[.,]\d+)?\s*%", question)))
+
+
+def scenario_terms(scenario: dict | None) -> str:
+    if not scenario:
+        return ""
+    parts = []
+    if abs(scenario["o2_fraction"] - 0.21) > 0.01:
+        parts.append(f"{round(scenario['o2_fraction'] * 100)} enriched oxygen")
+    if scenario["gravity_g"] > 0:
+        parts.append("partial gravity")
+    return " ".join(parts)
 
 
 CORE_TERMS = set(terms(CORE_WORDS))
@@ -194,10 +210,11 @@ class FindingIndex:
                 self.idf = {t: math.log(1 + len(self.items) / n) for t, n in df.items()}
             return self.items
 
-    def search(self, db: sqlite3.Connection, question: str, rewrite: str, area: str | None) -> list[dict]:
+    def search(self, db: sqlite3.Connection, question: str, rewrite: str, area: str | None,
+               prefer: str | None = None, extra: str = "") -> list[dict]:
         items = self.load(db)
-        strong = set(terms(glossary_terms(question))) | (set(terms(plain(question))) & CORE_TERMS)
-        weak = set(terms(rewrite)) - strong
+        strong = set(terms(f"{glossary_terms(question)} {percents(question)}")) | (set(terms(plain(question))) & CORE_TERMS)
+        weak = set(terms(f"{rewrite} {extra}")) - strong
         scored = []
         for item in items:
             if area and item["safety_area"] != area:
@@ -206,6 +223,8 @@ class FindingIndex:
             score = 3 * sum(self.idf.get(t, 0) for t in strong if t in found) + sum(self.idf.get(t, 0) for t in weak if t in found)
             if score > 0:
                 score = score / math.sqrt(max(len(found), 8)) * (0.5 + (item["confidence"] or 0) / 2)
+                if prefer and item["safety_area"] == prefer:
+                    score *= 1.25
                 scored.append((score, item))
         scored.sort(key=lambda pair: pair[0], reverse=True)
         results, seen = [], set()
@@ -525,8 +544,8 @@ def retrieve(db: sqlite3.Connection, body: ChatRequest, scenario: dict | None) -
     if rewrite is None:
         raw, provider = ask(REWRITE_SYSTEM, [{"role": "user", "content": body.question}], 100)
         rewrite = clean_rewrite(raw)
-    query = " ".join(part for part in dict.fromkeys((rewrite, glossary_terms(body.question))) if part) or body.question
-    findings = finding_index.search(db, body.question, rewrite, body.area)
+    query = " ".join(part for part in dict.fromkeys((rewrite, glossary_terms(body.question), percents(body.question))) if part) or body.question
+    findings = finding_index.search(db, body.question, rewrite, None, prefer=body.area, extra=scenario_terms(scenario))
     pages = search_pages(db, query)
     if not findings and not pages:
         return {"reply": {"answer": text["no_evidence"], "sources": [], "cited": [], "provider": provider,

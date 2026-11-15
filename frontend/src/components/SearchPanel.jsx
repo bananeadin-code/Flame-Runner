@@ -383,6 +383,14 @@ export function SearchPanel() {
             </Chip>
           ))}
         </div>
+        {question && area && (
+          <p className="mt-2 text-xs text-gris-oscuro">
+            {tr(
+              "El asistente da prioridad a las fuentes de esta área, sin descartar las demás.",
+              "The assistant prioritizes sources from this area without discarding the others.",
+            )}
+          </p>
+        )}
         {question ? (
           <Assistant key={`${question}|${scenarioId}|${area}|${lang}`} question={question} scenarioId={scenarioId} area={area} lang={lang} onReset={() => setQuestion(null)} />
         ) : (
