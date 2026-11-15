@@ -54,7 +54,7 @@ El selector ES/EN de la cabecera cambia todo el sitio y el idioma de las respues
 
 ## Asistente de evidencia
 
-`POST /api/chat/stream` devuelve la respuesta por partes (una línea JSON por evento: `status`, `sources`, `delta`, `done` o `error`), así el panel muestra el avance y va escribiendo el texto mientras el modelo lo genera; `POST /api/chat` sigue disponible con la respuesta completa de una vez. Antes de llamar al modelo filtra la pregunta: las preguntas sin relación con el fuego en el espacio, las peticiones creativas o de código y los intentos de cambiar sus instrucciones reciben una respuesta fija con `off_topic` (`scope`, `task` o `manipulation`) y el panel muestra preguntas sugeridas. Si la pregunta parece una emergencia real en la Tierra, la respuesta incluye un aviso en `notice`.
+`POST /api/chat/stream` devuelve la respuesta por partes (una línea JSON por evento: `status`, `sources`, `delta`, `done` o `error`), así el panel muestra el avance y va escribiendo el texto mientras el modelo lo genera; `POST /api/chat` sigue disponible con la respuesta completa de una vez. En el asistente, el área elegida da prioridad a sus fuentes sin excluir las demás, y la búsqueda tiene en cuenta los porcentajes de la pregunta (por ejemplo 34 % de oxígeno) y el oxígeno y la gravedad del escenario. Antes de llamar al modelo filtra la pregunta: las preguntas sin relación con el fuego en el espacio, las peticiones creativas o de código y los intentos de cambiar sus instrucciones reciben una respuesta fija con `off_topic` (`scope`, `task` o `manipulation`) y el panel muestra preguntas sugeridas. Si la pregunta parece una emergencia real en la Tierra, la respuesta incluye un aviso en `notice`.
 
 ## Imágenes en las respuestas
 
