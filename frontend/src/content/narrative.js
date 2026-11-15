@@ -57,12 +57,12 @@ export const EXAMPLES = [
 ];
 
 export const HITOS = [
-  ["1967", ["Apolo 1", "Apollo 1"], ["Un incendio en tierra, con oxígeno puro, cambia el diseño de las cápsulas.", "A ground fire in pure oxygen changes how capsules are designed."]],
-  ["1997", ["Incendio en la Mir", "Fire on Mir"], ["Un generador de oxígeno se prende y el humo llena un módulo durante horas.", "An oxygen generator catches fire and smoke fills a module for hours."]],
-  ["2003", ["Mist en el Columbia", "Mist on Columbia"], ["El proyecto Water Mist mide cómo las microgotas de agua frenan la llama.", "The Water Mist project measures how fine water droplets slow a flame."]],
-  ["2015", ["Agua nebulizada en la ISS", "Water mist on the ISS"], ["Los primeros extintores portátiles de agua nebulizada llegan para sustituir las unidades de CO₂.", "The first portable water mist extinguishers arrive to replace the CO₂ units."]],
-  ["2016", ["Saffire I", "Saffire I"], ["Se enciende fuego controlado en una nave de carga para estudiarlo.", "A controlled fire is lit on a cargo spacecraft to study it."]],
-  [["Hoy", "Today"], ["Protocolos actuales", "Current protocols"], ["Detección por capas y simulaciones con datos de los experimentos.", "Layered detection and simulations built on experiment data."]],
+  ["1967", ["Apolo 1", "Apollo 1"], ["Un incendio en tierra, con oxígeno puro, cambia el diseño de las cápsulas.", "A ground fire in pure oxygen changes how capsules are designed."], ["¿Qué cambió en la seguridad contra incendios después del incendio del Apolo 1 en 1967?", "What changed in fire safety after the 1967 Apollo 1 fire?"]],
+  ["1997", ["Incendio en la Mir", "Fire on Mir"], ["Un generador de oxígeno se prende y el humo llena un módulo durante horas.", "An oxygen generator catches fire and smoke fills a module for hours."], ["¿Qué pasó en el incendio de la estación Mir en 1997?", "What happened in the 1997 fire on the Mir station?"]],
+  ["2003", ["Mist en el Columbia", "Mist on Columbia"], ["El proyecto Water Mist mide cómo las microgotas de agua frenan la llama.", "The Water Mist project measures how fine water droplets slow a flame."], ["¿Qué midió el experimento Water Mist sobre la extinción de llamas con agua nebulizada?", "What did the Water Mist experiment measure about extinguishing flames with water mist?"]],
+  ["2015", ["Agua nebulizada en la ISS", "Water mist on the ISS"], ["Los primeros extintores portátiles de agua nebulizada llegan para sustituir las unidades de CO₂.", "The first portable water mist extinguishers arrive to replace the CO₂ units."], ["¿Por qué se sustituyeron los extintores de CO₂ por agua nebulizada en la ISS?", "Why were CO₂ extinguishers replaced by water mist on the ISS?"]],
+  ["2016", ["Saffire I", "Saffire I"], ["Se enciende fuego controlado en una nave de carga para estudiarlo.", "A controlled fire is lit on a cargo spacecraft to study it."], ["¿Qué aprendió la NASA de los incendios controlados de Saffire en naves Cygnus?", "What did NASA learn from the controlled Saffire fires on Cygnus spacecraft?"]],
+  [["Hoy", "Today"], ["Protocolos actuales", "Current protocols"], ["Detección por capas y simulaciones con datos de los experimentos.", "Layered detection and simulations built on experiment data."], ["¿Cómo se detecta y se combate hoy un incendio en una nave espacial?", "How is a fire detected and fought on a spacecraft today?"]],
 ];
 
 export const VIDEOS_APOLO1 = [

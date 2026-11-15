@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "../state/context";
 import { useApi } from "../lib/useApi";
 import { href } from "../lib/route";
@@ -102,6 +102,15 @@ export function Investigaciones({ query }) {
   const { area } = useApp();
   const { data, error, loading } = useApi("/api/investigations");
   const [selected, setSelected] = useState(query.acc || null);
+  const detail = useRef(null);
+  const [seenAcc, setSeenAcc] = useState(query.acc);
+  if (query.acc !== seenAcc) {
+    setSeenAcc(query.acc);
+    if (query.acc) setSelected(query.acc);
+  }
+  useEffect(() => {
+    if (selected && data) detail.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selected, data]);
   const list = (data || []).filter((i) => !area || i.primary_area === area);
   const platforms = {};
   (data || []).forEach((i) => {
@@ -154,7 +163,7 @@ export function Investigaciones({ query }) {
           </SectionTitle>
           <HardwareFamilies investigations={data} />
           {selected && (
-            <div className="mt-8">
+            <div ref={detail} className="mt-8 scroll-mt-20">
               <InvestigationDetail key={selected} accession={selected} onClose={() => setSelected(null)} />
             </div>
           )}
