@@ -1,11 +1,11 @@
 import json
 import re
 import sqlite3
-from .sources import doi_url, locate_quote, psi_url, source_link
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from .db import get_db
+from .sources import doi_url, locate_quote, psi_url, source_link
 
 router = APIRouter(prefix="/api")
 
@@ -79,14 +79,19 @@ def scenarios(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
 
 
 @router.get("/investigations")
-@router.get("/investigations")
 def investigations(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
     items = rows(db.execute(
         """SELECT i.accession, i.acronym, i.title, i.project_type, i.platform, i.primary_area, i.start_date, i.end_date,
                   (SELECT COUNT(*) FROM tests t WHERE t.accession = i.accession) AS tests,
                   (SELECT COUNT(DISTINCT f.id) FROM findings f JOIN citations c ON c.finding_id = f.id
                    WHERE f.accession = i.accession AND c.verified = 1) AS findings,
-                  (SELECT COUNT(*) FROM publications p WHERE p.accession = i.accession) AS publications
+                  (SELECT COUNT(*) FROM publications p WHERE p.accession = i.accession) AS publications,
+                  (SELECT MIN(o2_min) FROM tests t WHERE t.accession = i.accession) AS o2_min,
+                  (SELECT MAX(o2_max) FROM tests t WHERE t.accession = i.accession) AS o2_max,
+                  (SELECT MIN(pressure_kpa) FROM tests t WHERE t.accession = i.accession) AS pressure_min,
+                  (SELECT MAX(pressure_kpa) FROM tests t WHERE t.accession = i.accession) AS pressure_max,
+                  (SELECT MIN(flow_min_cm_s) FROM tests t WHERE t.accession = i.accession) AS flow_min,
+                  (SELECT MAX(flow_max_cm_s) FROM tests t WHERE t.accession = i.accession) AS flow_max
            FROM investigations i ORDER BY findings DESC"""))
     return [item | {"psi_url": psi_url(item["accession"])} for item in items]
 
@@ -227,10 +232,16 @@ def gaps(db: sqlite3.Connection = Depends(get_db)) -> dict:
                              "tests_in_scenario": len(matches), "gravity_g": scen["gravity_g"]})
     top_gaps = {}
     for area in AREAS:
-        top_gaps[area] = rows(db.execute(
-            f"""SELECT f.id, f.accession, f.statement, f.confidence, c.quote, p.page_no, d.title AS document_title
+        items = rows(db.execute(
+            f"""SELECT f.id, f.accession, i.acronym, f.statement, f.safety_area, f.finding_type, f.confidence, f.conditions,
+                       c.quote, p.page_no, d.id AS document_id, d.title AS document_title, d.path AS document_path
                 {verified} JOIN pages p ON p.id = c.page_id JOIN documents d ON d.id = p.document_id
+                LEFT JOIN investigations i ON i.accession = f.accession
                 WHERE f.safety_area = ? AND f.finding_type = 'gap' ORDER BY f.confidence DESC LIMIT 5""", (area,)))
+        for item in items:
+            item["conditions"] = json.loads(item["conditions"] or "{}")
+            item.update(source_link(item.pop("document_path"), item["accession"]))
+        top_gaps[area] = items
     return {"areas": areas, "gravity_coverage": gravity, "scenario_coverage": coverage, "top_gaps": top_gaps}
 
 
@@ -265,3 +276,93 @@ def search(
         if results:
             return {"query": q, "match": operator, "results": results}
     return {"query": q, "match": None, "results": []}
+
+
+@router.get("/measurements")
+def measurements(
+    quantity: str | None = None,
+    accession: str | None = None,
+    limit: int = Query(300, ge=1, le=2000),
+    db: sqlite3.Connection = Depends(get_db),
+) -> dict:
+    where, params = [], []
+    if accession:
+        where.append("t.accession = ?")
+        params.append(accession)
+    clause = f"WHERE {' AND '.join(where)}" if where else ""
+    quantities = rows(db.execute(
+        f"""SELECT m.quantity, m.unit, COUNT(*) AS count, COUNT(DISTINCT t.accession) AS investigations,
+                   GROUP_CONCAT(DISTINCT t.accession) AS accessions
+            FROM measurements m JOIN tests t ON t.id = m.test_id {clause}
+            GROUP BY m.quantity, m.unit ORDER BY count DESC""", params))
+    if not quantity:
+        return {"quantities": quantities, "quantity": None, "values": [], "stats": None}
+    values = rows(db.execute(
+        f"""SELECT t.id AS test_id, t.test_code, t.accession, t.fuel, t.fuel_class, t.o2_min, t.pressure_kpa,
+                   m.value, m.unit, m.is_approximate
+            FROM measurements m JOIN tests t ON t.id = m.test_id
+            WHERE m.quantity = ? {'AND t.accession = ?' if accession else ''}
+            ORDER BY m.value DESC LIMIT ?""", [quantity, *params, limit]))
+    if not values:
+        raise HTTPException(404, f"Sin mediciones para: {quantity}")
+    nums = [v["value"] for v in values]
+    stats = {"count": len(nums), "min": min(nums), "max": max(nums), "mean": sum(nums) / len(nums), "unit": values[0]["unit"]}
+    return {"quantities": quantities, "quantity": quantity, "values": values, "stats": stats}
+
+
+SUPPRESSANT_TERMS = {
+    "He": ("helium",), "CO2": ("carbon dioxide", "co2"), "N2": ("nitrogen",),
+    "Xe": ("xenon",), "Ar": ("argon",),
+}
+
+
+@router.get("/suppressants")
+def suppressants(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
+    tests_by_diluent = rows(db.execute(
+        """SELECT t.diluent, COUNT(*) AS tests,
+                  SUM(CASE WHEN t.outcome IN ('extinguished', 'self_extinguished', 'flow_terminated') THEN 1 ELSE 0 END) AS extinguished,
+                  AVG(t.burn_time_s) AS mean_burn_time_s,
+                  AVG(m.value) AS mean_extinction_diameter_mm,
+                  GROUP_CONCAT(DISTINCT t.accession) AS accessions
+           FROM tests t LEFT JOIN measurements m ON m.test_id = t.id AND m.quantity = 'extinction_diameter'
+           WHERE t.diluent IS NOT NULL GROUP BY t.diluent"""))
+    result = []
+    for agent, words in SUPPRESSANT_TERMS.items():
+        matching = [r for r in tests_by_diluent if agent in re.split(r"[+/]", r["diluent"])]
+        like = " OR ".join("LOWER(f.statement || ' ' || c.quote) LIKE ?" for _ in words)
+        findings_count = db.execute(
+            f"""SELECT COUNT(DISTINCT f.id) FROM findings f JOIN citations c ON c.finding_id = f.id AND c.verified = 1
+                WHERE f.safety_area = 'suppression' AND ({like})""", [f"%{w}%" for w in words]).fetchone()[0]
+        tests_total = sum(r["tests"] for r in matching)
+        burn = [r["mean_burn_time_s"] for r in matching if r["mean_burn_time_s"] is not None]
+        diameter = [r["mean_extinction_diameter_mm"] for r in matching if r["mean_extinction_diameter_mm"] is not None]
+        accessions = sorted({a for r in matching for a in (r["accessions"] or "").split(",") if a})
+        result.append({
+            "agent": agent, "query": words[0], "tests": tests_total,
+            "extinguished": sum(r["extinguished"] for r in matching),
+            "mean_burn_time_s": round(sum(burn) / len(burn), 2) if burn else None,
+            "mean_extinction_diameter_mm": round(sum(diameter) / len(diameter), 2) if diameter else None,
+            "investigations": accessions, "findings": findings_count,
+        })
+    return result
+
+
+@router.get("/library")
+def library(db: sqlite3.Connection = Depends(get_db)) -> dict:
+    return {
+        "documents_by_type": rows(db.execute(
+            """SELECT doc_type, COUNT(*) AS documents, SUM(n_pages) AS pages FROM documents
+               WHERE status IN ('loaded', 'extracted') GROUP BY doc_type ORDER BY documents DESC""")),
+        "documents_by_status": rows(db.execute(
+            "SELECT status, COUNT(*) AS documents FROM documents GROUP BY status ORDER BY documents DESC")),
+        "publications_by_investigation": rows(db.execute(
+            """SELECT i.accession, i.acronym, COUNT(p.id) AS publications, SUM(p.doi IS NOT NULL AND p.doi <> '') AS with_doi
+               FROM investigations i LEFT JOIN publications p ON p.accession = i.accession
+               GROUP BY i.accession ORDER BY publications DESC""")),
+        "totals": dict(db.execute(
+            """SELECT (SELECT COUNT(*) FROM publications) AS publications,
+                      (SELECT COUNT(*) FROM publications WHERE doi IS NOT NULL AND doi <> '') AS with_doi,
+                      (SELECT COUNT(*) FROM documents WHERE status IN ('loaded', 'extracted')) AS documents,
+                      (SELECT COUNT(*) FROM pages) AS pages""").fetchone()),
+    }
+

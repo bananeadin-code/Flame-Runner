@@ -1,16 +1,49 @@
-# React + Vite
+# Frontend · Fuego en el espacio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dashboard en React + Vite + Tailwind CSS 4 que consume la API de FastAPI del directorio `backend/`.
 
-Currently, two official plugins are available:
+## Desarrollo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+Con el backend corriendo en `http://localhost:8000` (`uvicorn backend.main:app --reload` desde la raíz del repo), Vite redirige `/api` al backend, así que no hace falta configurar nada.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Producción
 
-## Expanding the ESLint configuration
+```bash
+VITE_API_URL=https://tu-backend.onrender.com npm run build
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+`VITE_API_URL` es la URL pública del backend. En el backend, añade la URL del frontend a `ALLOWED_ORIGINS`.
+
+## Estructura
+
+| Carpeta | Contenido |
+|---|---|
+| `src/lib` | Cliente de la API (`api.js`, `useApi.js`), rutas con `#/`, páginas y formatos |
+| `src/state` | Estado global: escenario de misión, filtro de área, buscador y visor de fuentes |
+| `src/components` | Cabecera, buscador con asistente, visor de página, tarjeta de hallazgo, gráfico de dispersión |
+| `src/pages` | Inicio, Misión, Fuego en microgravedad, Datos de la investigación e Historia |
+| `src/content` | Textos narrativos e imágenes reales de la NASA con su crédito |
+| `public/media` | Fotografías de las fichas y la guía de combustión de la NASA |
+
+## Rutas de la API que usa cada página
+
+| Página | Peticiones |
+|---|---|
+| Inicio | `/api/stats`, `/api/gaps`, `/api/scenarios` |
+| Brechas y prioridades | `/api/gaps` |
+| Qué dice la evidencia | `/api/findings?scenario&area&limit` |
+| Extintores y agentes | `/api/suppressants`, `/api/findings?area=suppression&q` |
+| Flujo, Oxígeno | `/api/tests?scenario`, `/api/findings?q&scenario` |
+| Detección | `/api/findings?area=detection&type` |
+| Investigaciones | `/api/investigations`, `/api/investigations/{acc}` |
+| Resultados de pruebas | `/api/tests?scenario&fuel_class&only_in_scenario` |
+| Ambiente operativo | `/api/investigations` (rangos de O₂, presión y flujo) |
+| Mediciones | `/api/measurements`, `/api/measurements?quantity` |
+| Documentos y publicaciones | `/api/library`, `/api/investigations/{acc}` |
+| Buscador | `/api/search/all?q&area` y `POST /api/chat` |
+| Visor de fuente | `/api/documents/{id}/pages/{n}?quote` |
