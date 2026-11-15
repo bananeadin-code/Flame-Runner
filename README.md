@@ -21,3 +21,16 @@ URL: https://flame-runner-frontend.onrender.com/
 We used AI tools during development, always under the team's direction and review. Claude, by Anthropic, helped us automate the collection of information from the resources provided by NASA Space Apps and the PSI repository, extract and verify findings from the documents, carry out repetitive tasks such as data cleaning and translation, review code, and keep the project consistent with the structure our team defined. Every extracted finding was automatically checked against the exact text of its source document, and the design decisions, scope, and final content were decided and validated by the team.
 
 Inside the product, AI is used in two places: Claude extracted the findings that make up the knowledge base, and the evidence assistant uses Gemma 4, with Claude as a fallback, to answer questions using only the sources retrieved from that base.
+
+## Run it locally with Docker
+
+The whole project runs with Docker Compose in three services: Ollama with the Gemma 4 model, the FastAPI backend, and the React frontend served by nginx. The database is a SQLite file, so it lives in a volume of the backend instead of a separate service, and it is downloaded automatically from the `db-v2` release the first time.
+
+    docker compose up -d --build
+    docker compose run --rm model
+
+The second command downloads Gemma 4 E4B (about 6.6 GB) once. The site is then available at http://localhost:8080, and the API at http://localhost:8000/api/health. With an NVIDIA GPU and the NVIDIA Container Toolkit installed, start it with `docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build` so the model runs on the GPU.
+
+Settings can go in a `.env` file next to `docker-compose.yml`: `LLM_MODEL` changes the model, `ANTHROPIC_API_KEY` enables Claude as a fallback, and `FRONTEND_PORT` or `BACKEND_PORT` change the ports. On a Mac, Docker cannot use the Apple GPU, so it is faster to run Ollama natively and point the backend to it with `LOCAL_LLM_URL=http://host.docker.internal:11434/v1`, then start only `docker compose up -d --build --no-deps backend frontend`.
+
+Without Docker, `./setup.sh` installs the Python environment, Ollama, the model, the database and the frontend dependencies.
