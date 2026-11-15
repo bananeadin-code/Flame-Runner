@@ -9,6 +9,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from .api import router
 from .chat import router as chat_router
 from .config import settings
+from .insights import router as insights_router
 from .db import init_db
 from .limits import limiter
 
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 app.include_router(router)
 app.include_router(chat_router)
+app.include_router(insights_router)
 
 
 @app.get("/api/health")

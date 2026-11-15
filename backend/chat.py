@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from .api import AREAS, fts_query, scenario_or_404
 from .config import settings
 from .db import connect, get_db
+from .insights import rank_investigations
 from .limits import limiter
 from .sources import source_link
 
@@ -28,6 +29,7 @@ log = logging.getLogger("uvicorn.error")
 
 MAX_FINDINGS = 12
 MAX_PAGES = 4
+RANKING_TOP = 5
 LOCAL_COOLDOWN_S = 60
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 STOPWORDS = {"the", "and", "for", "with", "what", "how", "does", "are", "was", "were", "this", "that", "from", "into",
@@ -57,7 +59,8 @@ helium nitrogen xenon argon co2 diluent plume blaze fuego fuegos incendio incend
 apaga apagan apague extincion extinguir extintor extintores supresion supresor supresores oxigeno microgravedad
 combustible combustibles combustion inflamable inflamables inflamabilidad propagacion propaga ignicion encendido
 vela velas detector detectores deteccion sensores alarma ventilacion helio nitrogeno xenon argon dioxido diluyente
-arde arder quema quemar acme saffire bass daft flex cfi psi sofbal mist"""
+arde arder quema quemar acme saffire bass daft flex cfi psi sofbal mist investigacion investigaciones
+investigation investigations experimento experimentos experiment experiments riesgo riesgos risk risks hazard hazards"""
 
 TASK_PATTERN = re.compile(
     r"\b(poema|poemas|poem|poems|poesia|poetry|cuento|cuentos|story|stories|chiste|chistes|joke|jokes|cancion|song|"
@@ -68,6 +71,12 @@ INJECTION_PATTERN = re.compile(
     r"instructions|rules|prompt)\b|system prompt|prompt del sistema|tus instrucciones|your instructions|"
     r"finge (que|ser)|pretend (to be|you)|you are now|ahora eres|from now on you|a partir de ahora eres|"
     r"jailbreak|developer mode|modo desarrollador")
+ROCKET_PATTERN = re.compile(
+    r"\b(cohete|cohetes|rocket|rockets|propelente|propelentes|propellant|propellants|propulsor|propulsores|"
+    r"thruster|thrusters|motor cohete|motores cohete)\b")
+RANKING_PATTERN = re.compile(
+    r"\b(investigaci\w*|experimento\w*|estudio\w*|ranking|relevan\w*|investigation\w*|experiment\w*|stud(y|ies)|"
+    r"priori\w*|recomien\w*|recommend\w*)\b")
 EARTH_PATTERN = re.compile(
     r"\b(mi casa|my house|my home|en casa|at home|cocina|kitchen|edificio|building|mi coche|my car|"
     r"incendio forestal|wildfire|forest fire|bomberos|firefighters|911|112|ahora mismo|right now)\b")
@@ -80,6 +89,7 @@ MESSAGES = {
         "task": "No escribo textos creativos, código ni traducciones. Soy un asistente de evidencia: resumo lo que dicen los experimentos de la NASA sobre el fuego en el espacio.",
         "manipulation": "No puedo cambiar mis instrucciones. Solo respondo con la evidencia de la NASA sobre fuego en microgravedad.",
         "no_evidence": "No encontré evidencia en la base de datos de la NASA para esa pregunta.",
+        "rocket": "Los cohetes y propelentes quedan fuera de los datos de PSI: dentro de un motor la combustión es tan rápida que casi no depende de la gravedad. Puedo responder sobre incendios en naves, estaciones y hábitats.",
         "earth": "Si se trata de una emergencia real, llama a los servicios de emergencia de tu zona. Estas fuentes describen experimentos en microgravedad, no recomendaciones para incendios domésticos.",
     },
     "en": {
@@ -87,6 +97,7 @@ MESSAGES = {
         "task": "I do not write creative texts, code or translations. I am an evidence assistant: I summarize what NASA experiments say about fire in space.",
         "manipulation": "I cannot change my instructions. I only answer with NASA evidence on fire in microgravity.",
         "no_evidence": "I found no evidence in the NASA database for that question.",
+        "rocket": "Rockets and propellants are outside the PSI data: inside an engine combustion is so fast that it barely depends on gravity. I can answer about fires in spacecraft, stations and habitats.",
         "earth": "If this is a real emergency, call your local emergency services. These sources describe experiments in microgravity, not advice for fires at home.",
     },
 }
@@ -109,7 +120,7 @@ Rules:
 2. If the sources do not answer the question, say so plainly and say what data would be needed.
 3. Say when a result comes from a numerical simulation, a model or a ground test rather than a flight experiment.
 4. If two sources disagree, say so and cite both.
-5. Gravity matters: almost all sources are microgravity results. The Moon (0.165 g) and Mars (0.38 g) have buoyancy, so flames there behave differently from microgravity. When the scenario is lunar or Mars, state clearly that microgravity evidence cannot be transferred directly and that partial-gravity data is a known gap.
+5. Gravity matters: almost all sources are microgravity results, and PSI contains no partial-gravity combustion tests yet (LUCI and FM2 are planned). The Moon (0.165 g) and Mars (0.38 g) have buoyancy, so flames there behave differently. When the scenario is lunar, Martian or a rover, say that microgravity and normal-gravity results can only bound the behavior at intermediate gravity, and that ACME E-FIELD Flames mimicked buoyancy with an electric field.
 6. Oxygen matters: when the scenario oxygen differs from the tests (for example 34% versus 21%), point it out.
 7. Always write the answer in {language}, whatever the language of the question or the sources, in plain text. You may use short bullet lists with "-". Do not use LaTeX, math notation or dollar signs; write CO2, O2, 0.165 g as plain text.
 8. Keep the answer under about 250 words.
@@ -185,6 +196,8 @@ def screen(question: str, history: list[dict]) -> str | None:
         return "manipulation"
     if TASK_PATTERN.search(text):
         return "task"
+    if ROCKET_PATTERN.search(text):
+        return "rocket"
     previous = " ".join(t["content"] for t in history if t["role"] == "user")
     words = set(terms(plain(f"{question} {previous}")))
     if words & CORE_TERMS:
@@ -547,16 +560,35 @@ def retrieve(db: sqlite3.Connection, body: ChatRequest, scenario: dict | None) -
     query = " ".join(part for part in dict.fromkeys((rewrite, glossary_terms(body.question), percents(body.question))) if part) or body.question
     findings = finding_index.search(db, body.question, rewrite, None, prefer=body.area, extra=scenario_terms(scenario))
     pages = search_pages(db, query)
-    if not findings and not pages:
+    ranking = rank_investigations(db, scenario, body.area)[:RANKING_TOP] if scenario and RANKING_PATTERN.search(plain(body.question)) else []
+    if not findings and not pages and not ranking:
         return {"reply": {"answer": text["no_evidence"], "sources": [], "cited": [], "provider": provider,
                           "search_query": query, "off_topic": None, "notice": notice}}
     context, sources = render_sources(findings, pages)
+    if ranking:
+        n = len(sources) + 1
+        lines = [f"  {r['rank']}. {r['acronym'] or r['accession']} ({r['accession']}): score {r['score']:.2f}, "
+                 f"{r['tests_in_scenario']} of {r['tests']} tests within the scenario O2 and pressure, "
+                 f"O2 tested {fmt_range(r['o2_min'], r['o2_max'], 100, '%')}, pressure tested {fmt_range(r['pressure_min'], r['pressure_max'], 1, ' kPa')}, "
+                 f"{r['findings']} verified findings" for r in ranking]
+        context += (f"\n[{n}] Investigation relevance ranking for this scenario, computed by the dashboard from PSI test tables "
+                    "(oxygen proximity, tests within the scenario O2 and pressure, verified findings, pressure proximity, flight versus ground):\n"
+                    + "\n".join(lines))
+        sources.append({"n": n, "kind": "ranking", "relevance": 1.0, "scenario": scenario["id"],
+                        "statement": "; ".join(f"{r['rank']}. {r['acronym'] or r['accession']} ({r['score']:.2f})" for r in ranking),
+                        "quote": "", "accession": None})
     scenario_line = (f"Mission scenario: {scenario['name']} ({scenario['o2_fraction'] * 100:.1f}% O2, "
                      f"{scenario['pressure_kpa']} kPa, {scenario['gravity_g']} g)\n\n") if scenario else ""
     history = [t.model_dump() for t in body.history]
     messages = history + [{"role": "user", "content": f"{scenario_line}Sources:\n{context}\n\nQuestion: {body.question}"}]
     return {"sources": sources, "messages": messages, "query": query, "notice": notice,
             "system": ANSWER_SYSTEM.replace("{language}", LANGUAGES[body.lang])}
+
+
+def fmt_range(low: float | None, high: float | None, scale: float, unit: str) -> str:
+    if low is None:
+        return "not recorded"
+    return f"{low * scale:.0f}{unit}" if low == high else f"{low * scale:.0f}-{high * scale:.0f}{unit}"
 
 
 def finish(prepared: dict, answer: str, provider: str) -> dict:

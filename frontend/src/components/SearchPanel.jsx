@@ -49,7 +49,24 @@ const OFF_TOPIC_TITLE = {
   scope: ["Fuera del alcance", "Out of scope"],
   task: ["Petición no admitida", "Request not supported"],
   manipulation: ["Instrucción ignorada", "Instruction ignored"],
+  rocket: ["Fuera de los datos de PSI", "Outside the PSI data"],
 };
+
+function CopyLink({ question, scenarioId }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    const url = `${window.location.origin}${window.location.pathname}#/inicio?pregunta=${encodeURIComponent(question)}&escenario=${scenarioId}`;
+    navigator.clipboard?.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button onClick={copy} className="rounded-full bg-claro px-2.5 py-0.5 hover:bg-linea">
+      {copied ? tr("✓ Enlace copiado", "✓ Link copied") : tr("Copiar enlace", "Copy link")}
+    </button>
+  );
+}
 
 function Examples({ onAsk }) {
   return (
@@ -98,9 +115,21 @@ function SourceList({ sources, cited, focus }) {
           {s.n}
         </span>
         <div className="min-w-0">
-          {s.statement && <p className="text-sm">{s.statement}</p>}
-          <blockquote className="mt-1 border-l-2 border-rojo pl-2 font-serif text-xs italic text-gris-oscuro">“{s.quote}”</blockquote>
-          <SourceActions item={s} />
+          {s.kind === "ranking" ? (
+            <>
+              <p className="text-sm font-medium">{tr("Ranking de investigaciones para este escenario", "Investigation ranking for this scenario")}</p>
+              <p className="mt-1 text-sm text-gris-oscuro">{s.statement}</p>
+              <Link to="ranking" className="mt-2 inline-block text-sm font-medium text-azul hover:underline">
+                {tr("Ver el ranking completo", "See the full ranking")} →
+              </Link>
+            </>
+          ) : (
+            <>
+              {s.statement && <p className="text-sm">{s.statement}</p>}
+              <blockquote className="mt-1 border-l-2 border-rojo pl-2 font-serif text-xs italic text-gris-oscuro">“{s.quote}”</blockquote>
+              <SourceActions item={s} />
+            </>
+          )}
         </div>
       </div>
     </li>
@@ -203,6 +232,7 @@ function Assistant({ question, scenarioId, area, lang, onReset }) {
                 <div className="mb-3 flex flex-wrap gap-2 text-xs text-gris-oscuro">
                   <span className="rounded-full bg-azul/10 px-2.5 py-0.5 font-medium text-azul">{tr("Asistente de evidencia", "Evidence assistant")}</span>
                   {view.provider && <span className="rounded-full bg-claro px-2.5 py-0.5">{pick(PROVIDER_LABEL[view.provider]) || view.provider}</span>}
+                  {t.answer && <CopyLink question={t.question} scenarioId={scenarioId} />}
                   {view.search_query && (
                     <span className="max-w-full truncate rounded-full bg-claro px-2.5 py-0.5">
                       {tr("Búsqueda", "Search")}: {view.search_query}
