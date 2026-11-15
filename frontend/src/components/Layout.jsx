@@ -6,11 +6,11 @@ import { pick, tr } from "../lib/i18n";
 import { AREA_LABEL, AREAS, label, num } from "../lib/format";
 import { Chip } from "./ui";
 
-export function ScenarioSelect({ dark = false }) {
+export function ScenarioSelect({ dark = false, showLabel = false }) {
   const { scenarios, scenarioId, setScenario } = useApp();
   return (
     <label className={`flex items-center gap-2 text-sm ${dark ? "text-white" : "text-noche"}`}>
-      <span className="hidden xl:inline">{tr("Escenario", "Scenario")}</span>
+      <span className={showLabel ? "text-xs uppercase tracking-wide text-gris-oscuro" : "hidden xl:inline"}>{tr("Escenario", "Scenario")}</span>
       <select
         value={scenarioId}
         onChange={(e) => setScenario(e.target.value)}

@@ -9,6 +9,7 @@ import { FindingCard, SourceActions } from "./FindingCard";
 import { Chip, ErrorBox, Loading } from "./ui";
 import { pick, tr } from "../lib/i18n";
 import { EXAMPLES } from "../content/narrative";
+import { ScenarioSelect } from "./Layout";
 
 const PROVIDER_LABEL = { local: ["Gemma 4 · servidor del equipo", "Gemma 4 · team server"], anthropic: ["Claude Haiku · respaldo", "Claude Haiku · fallback"] };
 
@@ -249,7 +250,7 @@ function InstantResults({ query, area, onAsk }) {
 }
 
 export function SearchPanel() {
-  const { search, closeSearch, scenario, scenarioId, area, setArea, lang } = useApp();
+  const { search, closeSearch, scenarioId, area, setArea, lang } = useApp();
   const [text, setText] = useState(search?.text || "");
   const [question, setQuestion] = useState(search?.ask ? search.text : null);
   const input = useRef(null);
@@ -269,9 +270,7 @@ export function SearchPanel() {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-white animate-aparecer" role="dialog" aria-label={tr("Buscar y preguntar", "Search and ask")}>
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-5 sm:py-8 md:px-8">
         <div className="flex items-center justify-between gap-3">
-          <small className="text-xs uppercase tracking-wide text-gris-oscuro">
-            {tr("Escenario", "Scenario")}: <b className="text-noche">{scenario?.name || "—"}</b>
-          </small>
+          <ScenarioSelect showLabel />
           <button onClick={closeSearch} className="text-4xl leading-none text-gris-oscuro hover:text-noche" aria-label={tr("Cerrar", "Close")}>
             ×
           </button>
