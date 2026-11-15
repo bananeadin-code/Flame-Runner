@@ -11,6 +11,7 @@ export const PAGES = {
   riesgos: { title: ["Brechas y prioridades", "Gaps and priorities"], parent: MISSION },
   recomendacion: { title: ["Qué dice la evidencia", "What the evidence says"], parent: MISSION },
   prototipos: { title: ["Extintores y agentes", "Extinguishers and agents"], parent: MISSION },
+  simulador: { title: ["Simulador de llama", "Flame simulator"], parent: FIRE },
   viento: { title: ["Flujo y ventilación", "Flow and ventilation"], parent: FIRE },
   oxigeno: { title: ["Concentración de oxígeno", "Oxygen concentration"], parent: FIRE },
   sensores: { title: ["Detección", "Detection"], parent: FIRE },
@@ -28,7 +29,7 @@ export const pageParent = (id) => pick(PAGES[id].parent || HOME);
 
 export const ORDER = Object.keys(PAGES);
 
-const FIRE_IDS = ["viento", "oxigeno", "sensores", "comparacion"];
+const FIRE_IDS = ["simulador", "viento", "oxigeno", "sensores", "comparacion"];
 const DATA_IDS = ["investigaciones", "pruebas", "ambiente", "mediciones", "publicaciones"];
 const MISSION_IDS = ["riesgos", "recomendacion", "prototipos"];
 
@@ -43,7 +44,7 @@ export const MENU = [
 export const NAV = [
   ["intro", ["Introducción", "Introduction"], ["intro"]],
   ["riesgos", MISSION, MISSION_IDS],
-  ["viento", ["Dashboard", "Dashboard"], [...FIRE_IDS, ...DATA_IDS]],
+  ["simulador", ["Dashboard", "Dashboard"], [...FIRE_IDS, ...DATA_IDS]],
   ["historia", ["Historia", "History"], ["historia"]],
 ];
 
