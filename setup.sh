@@ -97,7 +97,17 @@ if [ ! -f ".env" ]; then
     fi
 
     # Ensure local Ollama URL is set if not already present
-    grep -q "^OLLAMA_BASE_URL=" .env || echo "OLLAMA_BASE_URL=$LOCAL_OLLAMA_HOST" >> .env
+    set_env() {
+        if grep -q "^$1=." .env; then
+            return 0
+        fi
+        sed -i.bak "/^$1=/d" .env && rm -f .env.bak
+        echo "$1=$2" >> .env
+    }
+    set_env CHAT_PROVIDER local
+    set_env LOCAL_LLM_URL "$LOCAL_OLLAMA_HOST/v1"
+    set_env LOCAL_LLM_MODEL "$MODEL_NAME"
+    set_env LOCAL_LLM_TIMEOUT 180
     ok ".env file created."
 else
     info ".env file already exists; keeping current configuration."
@@ -173,12 +183,16 @@ fi
 # ------------------------------------------------------------------------------
 # 6. Database Ingestion (PSI Experimental Tables & Documents)
 # ------------------------------------------------------------------------------
-info "Loading PSI experimental tables into SQLite..."
-.venv/bin/python -m backend.ingest.load_tables
-
-info "Loading documents and FTS5 search index..."
-.venv/bin/python -m backend.ingest.load_documents
-ok "Database built successfully."
+DB_URL="https://github.com/bananeadin-code/Flame-Runner/releases/download/db-v2/flame.db"
+mkdir -p "$ROOT_DIR/data"
+if [ -s "$ROOT_DIR/data/flame.db" ]; then
+    ok "Database already present: data/flame.db"
+else
+    info "Downloading the verified database (db-v2, ~51 MB)..."
+    curl -fL --retry 4 -o "$ROOT_DIR/data/flame.db.part" "$DB_URL"
+    mv "$ROOT_DIR/data/flame.db.part" "$ROOT_DIR/data/flame.db"
+    ok "Database downloaded: data/flame.db"
+fi
 
 # ------------------------------------------------------------------------------
 # 7. Frontend Dependencies (React + Vite)
