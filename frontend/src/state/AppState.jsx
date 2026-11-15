@@ -44,6 +44,15 @@ export function AppProvider({ children }) {
       );
   }, [lang]);
 
+  useEffect(() => {
+    const onNavigate = () => {
+      setSearch(null);
+      setSource(null);
+    };
+    window.addEventListener("hashchange", onNavigate);
+    return () => window.removeEventListener("hashchange", onNavigate);
+  }, []);
+
   const setLang = useCallback((value) => {
     setLangState(value);
     store("idioma", value);

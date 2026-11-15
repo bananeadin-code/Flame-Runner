@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useApp } from "../state/context";
 import { AREA_LABEL, FINDING_TYPE_LABEL, GRAVITY_LABEL, label, num } from "../lib/format";
 import { Tag } from "./ui";
+import { Link } from "./Link";
 
 const TYPE_TONE = { quantitative: "azul", qualitative: "gris", gap: "rojo" };
 
@@ -75,7 +76,11 @@ export function FindingCard({ finding, showScore = false, compact = false }) {
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <Tag tone="azul">{label(AREA_LABEL, finding.safety_area)}</Tag>
         <Tag tone={TYPE_TONE[finding.finding_type]}>{label(FINDING_TYPE_LABEL, finding.finding_type)}</Tag>
-        {finding.acronym && <Tag>{finding.acronym}</Tag>}
+        {finding.acronym && (
+          <Link to="investigaciones" query={{ acc: finding.accession }} className="rounded-full bg-claro px-2.5 py-0.5 text-xs font-medium text-gris-oscuro hover:bg-linea hover:text-noche">
+            {finding.acronym}
+          </Link>
+        )}
         {finding.value != null && (
           <Tag tone="gris">
             {num(finding.value)} {finding.unit}

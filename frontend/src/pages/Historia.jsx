@@ -98,8 +98,8 @@ export function Historia() {
         ))}
       </div>
       <div className="mt-6">
-        <AskButton question={tr("¿Qué pasó en el incendio de la estación Mir en 1997?", "What happened in the 1997 fire on the Mir station?")}>
-          {tr("Preguntar por el incendio de la Mir", "Ask about the Mir fire")}
+        <AskButton question={pick(HITOS[active][3])}>
+          {tr("Preguntar por", "Ask about")}: {pick(HITOS[active][1])}
         </AskButton>
       </div>
       <SectionTitle

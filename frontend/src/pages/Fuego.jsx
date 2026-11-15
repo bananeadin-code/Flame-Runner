@@ -187,6 +187,11 @@ export function Oxigeno() {
           )}
         </p>
       </Card>
+      <div className="mt-4">
+        <AskButton question={tr(`¿Qué pasa con una llama a ${o2} % de oxígeno?`, `What happens to a flame at ${o2} % oxygen?`)}>
+          {tr(`Preguntar por ${o2} % de O₂`, `Ask about ${o2} % O₂`)}
+        </AskButton>
+      </div>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (

@@ -333,6 +333,11 @@ export function Prototipos() {
           </KpiRow>
           {current.tests === 0 && <Note>{tr("No hay pruebas tabuladas con este gas; su evidencia viene de simulaciones y artículos.", "There are no tabulated tests with this gas; its evidence comes from simulations and papers.")}</Note>}
           <AgentFindings agent={agent} />
+          <div className="mt-6">
+            <AskButton question={tr(`¿Qué tan eficaz es el ${pick(AGENTES[agent].nombre).toLowerCase()} para apagar fuegos en microgravedad?`, `How effective is ${pick(AGENTES[agent].nombre).toLowerCase()} at putting out fires in microgravity?`)}>
+              {tr("Preguntar por", "Ask about")} {pick(AGENTES[agent].nombre).toLowerCase()}
+            </AskButton>
+          </div>
         </div>
       )}
       <SectionTitle sub={tr("Sistemas usados a bordo a lo largo de la historia.", "Systems used on board throughout history.")}>{tr("Contexto operativo", "Operational context")}</SectionTitle>
