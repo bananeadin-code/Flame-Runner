@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useApp } from "../state/context";
-import { apiPost } from "../lib/api";
+import { apiStream, statusError } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import { Link } from "../components/Link";
 import { AREA_LABEL, AREAS, label } from "../lib/format";
@@ -9,6 +9,39 @@ import { FindingCard, SourceActions } from "./FindingCard";
 import { Chip, ErrorBox, Loading } from "./ui";
 import { pick, tr } from "../lib/i18n";
 import { EXAMPLES } from "../content/narrative";
+import { ScenarioSelect } from "./Layout";
+import { answerImages } from "../lib/images";
+
+function AnswerImages({ answer }) {
+  const images = answerImages(answer);
+  if (!images.length) return null;
+  return (
+    <div className="mt-6">
+      <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gris-oscuro">{tr("Imágenes de referencia", "Reference images")}</h4>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {images.map((m) => (
+          <figure key={m.id} className="min-w-0">
+            <a href={m.src} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg bg-noche">
+              <img src={m.src} alt={pick(m.alt)} loading="lazy" className="aspect-[4/3] w-full object-cover transition duration-500 hover:scale-105" />
+            </a>
+            <figcaption className="mt-1.5 text-xs text-gris-oscuro">
+              {pick(m.alt)}.{" "}
+              <a href={m.url} target="_blank" rel="noreferrer" className="underline decoration-linea underline-offset-2 hover:decoration-noche">
+                {pick(m.credit)} ↗
+              </a>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <p className="mt-2 text-xs text-gris-oscuro">
+        {tr(
+          "Imágenes ilustrativas de la NASA elegidas según las fuentes citadas y el tema; no forman parte de la evidencia citada.",
+          "Illustrative NASA images chosen from the cited sources and the topic; they are not part of the cited evidence.",
+        )}
+      </p>
+    </div>
+  );
+}
 
 const PROVIDER_LABEL = { local: ["Gemma 4 · servidor del equipo", "Gemma 4 · team server"], anthropic: ["Claude Haiku · respaldo", "Claude Haiku · fallback"] };
 
@@ -86,27 +119,63 @@ function SourceList({ sources, cited, focus }) {
   );
 }
 
+const STAGE_TEXT = {
+  searching: ["Buscando en la base de datos de la NASA…", "Searching the NASA database…"],
+  thinking: ["Analizando las fuentes encontradas…", "Analyzing the sources found…"],
+  writing: ["Redactando la respuesta…", "Writing the answer…"],
+};
+
+const RULE_TAG = /\s*\[(?:Regla|Rule|Norma)\s*\d+\]/g;
+
 function Assistant({ question, scenarioId, area, lang, onReset }) {
   const [turns, setTurns] = useState([]);
   const [focus, setFocus] = useState(null);
   const [followUp, setFollowUp] = useState("");
-  const asked = useRef(new Set());
+  const nextId = useRef(0);
+  const controllers = useRef(new Set());
 
   const ask = (text) => {
     const history = turns.flatMap((t) => (t.answer && !t.answer.off_topic ? [{ role: "user", content: t.question }, { role: "assistant", content: t.answer.answer }] : [])).slice(-6);
-    const index = turns.length;
-    setTurns((prev) => [...prev, { question: text, answer: null, error: null }]);
-    apiPost("/api/chat", { question: text, scenario: scenarioId || undefined, area: area || undefined, history, lang })
-      .then((answer) => setTurns((prev) => prev.map((t, i) => (i === index ? { ...t, answer } : t))))
-      .catch((error) => setTurns((prev) => prev.map((t, i) => (i === index ? { ...t, error } : t))));
+    const id = nextId.current++;
+    const controller = new AbortController();
+    controllers.current.add(controller);
+    const update = (change) => setTurns((prev) => prev.map((t) => (t.id === id ? { ...t, ...change(t) } : t)));
+    setTurns((prev) => [...prev, { id, question: text, answer: null, error: null, live: { stage: "searching", text: "", sources: [] } }]);
+    let finished = false;
+    const onEvent = (event) => {
+      if (event.type === "status") update((t) => ({ live: { ...t.live, stage: event.stage, provider: event.provider || t.live.provider } }));
+      else if (event.type === "sources") update((t) => ({ live: { ...t.live, sources: event.sources, search_query: event.search_query, notice: event.notice } }));
+      else if (event.type === "delta") update((t) => ({ live: { ...t.live, text: t.live.text + event.text } }));
+      else if (event.type === "done") {
+        finished = true;
+        const answer = { ...event };
+        delete answer.type;
+        update(() => ({ answer, live: null }));
+      } else if (event.type === "error") {
+        finished = true;
+        update(() => ({ error: statusError(event.status) }));
+      }
+    };
+    apiStream("/api/chat/stream", { question: text, scenario: scenarioId || undefined, area: area || undefined, history, lang }, onEvent, controller.signal)
+      .then(() => !finished && update(() => ({ error: statusError(0) })))
+      .catch((error) => {
+        if (error.name === "AbortError") setTurns((prev) => prev.filter((t) => t.id !== id));
+        else update(() => ({ error }));
+      })
+      .finally(() => controllers.current.delete(controller));
+    return controller;
   };
 
   useEffect(() => {
-    if (question && !asked.current.has(question)) {
-      asked.current.add(question);
-      ask(question);
-    }
+    if (!question) return undefined;
+    const controller = ask(question);
+    return () => controller.abort();
   }, [question]);
+
+  useEffect(() => {
+    const active = controllers.current;
+    return () => active.forEach((c) => c.abort());
+  }, []);
 
   const cite = (n) => {
     setFocus(n);
@@ -116,38 +185,50 @@ function Assistant({ question, scenarioId, area, lang, onReset }) {
   const pending = turns.some((t) => !t.answer && !t.error);
   return (
     <div className="mt-6 space-y-10">
-      {turns.map((t, i) => (
-        <section key={i} className="animate-aparecer">
-          <p className="font-serif text-xl break-words sm:text-2xl">{t.question}</p>
-          {!t.answer && !t.error && (
-            <Loading text={tr("Consultando la base de datos de la NASA y redactando la respuesta… puede tardar unos segundos.", "Searching the NASA database and writing the answer… this can take a few seconds.")} />
-          )}
-          <ErrorBox error={t.error} />
-          {t.answer?.off_topic && <OffTopic reason={t.answer.off_topic} text={t.answer.answer} onAsk={(q) => !pending && ask(q)} />}
-          {t.answer && !t.answer.off_topic && (
-            <div className="mt-4">
-              <div className="mb-3 flex flex-wrap gap-2 text-xs text-gris-oscuro">
-                <span className="rounded-full bg-azul/10 px-2.5 py-0.5 font-medium text-azul">{tr("Asistente de evidencia", "Evidence assistant")}</span>
-                {t.answer.provider && <span className="rounded-full bg-claro px-2.5 py-0.5">{pick(PROVIDER_LABEL[t.answer.provider]) || t.answer.provider}</span>}
-                {t.answer.search_query && (
-                  <span className="max-w-full truncate rounded-full bg-claro px-2.5 py-0.5">
-                    {tr("Búsqueda", "Search")}: {t.answer.search_query}
-                  </span>
+      {turns.map((t) => {
+        const live = !t.answer && t.live?.text ? t.live : null;
+        const view = t.answer || (live && { answer: live.text.replace(RULE_TAG, ""), cited: live.sources.map((s) => s.n), provider: live.provider, search_query: live.search_query, notice: live.notice });
+        const streaming = !t.answer && !t.error;
+        return (
+          <section key={t.id} className="animate-aparecer">
+            <p className="font-serif text-xl break-words sm:text-2xl">{t.question}</p>
+            {streaming && !live && (
+              <Loading
+                text={`${pick(STAGE_TEXT[t.live?.stage] || STAGE_TEXT.searching)}${t.live?.sources?.length ? ` · ${t.live.sources.length} ${tr("fuentes", "sources")}` : ""}`}
+              />
+            )}
+            {t.answer?.off_topic && <OffTopic reason={t.answer.off_topic} text={t.answer.answer} onAsk={(q) => !pending && ask(q)} />}
+            {view && !view.off_topic && (
+              <div className="mt-4">
+                <div className="mb-3 flex flex-wrap gap-2 text-xs text-gris-oscuro">
+                  <span className="rounded-full bg-azul/10 px-2.5 py-0.5 font-medium text-azul">{tr("Asistente de evidencia", "Evidence assistant")}</span>
+                  {view.provider && <span className="rounded-full bg-claro px-2.5 py-0.5">{pick(PROVIDER_LABEL[view.provider]) || view.provider}</span>}
+                  {view.search_query && (
+                    <span className="max-w-full truncate rounded-full bg-claro px-2.5 py-0.5">
+                      {tr("Búsqueda", "Search")}: {view.search_query}
+                    </span>
+                  )}
+                </div>
+                {view.notice && (
+                  <p className="mb-3 rounded-lg border border-rojo/40 bg-rojo/5 p-3 text-sm" role="alert">
+                    {view.notice}
+                  </p>
+                )}
+                <div className="rounded-xl bg-claro/60 p-4 text-[1.02rem] sm:p-5" aria-live="polite" aria-busy={streaming}>
+                  <AnswerText text={view.answer} cited={view.cited} onCite={t.answer ? cite : undefined} caret={streaming} />
+                </div>
+                {t.answer && (
+                  <>
+                    <AnswerImages answer={t.answer} />
+                    {t.answer.sources.length > 0 && <SourceList sources={t.answer.sources} cited={t.answer.cited} focus={focus} />}
+                  </>
                 )}
               </div>
-              {t.answer.notice && (
-                <p className="mb-3 rounded-lg border border-rojo/40 bg-rojo/5 p-3 text-sm" role="alert">
-                  {t.answer.notice}
-                </p>
-              )}
-              <div className="rounded-xl bg-claro/60 p-4 text-[1.02rem] sm:p-5">
-                <AnswerText text={t.answer.answer} cited={t.answer.cited} onCite={cite} />
-              </div>
-              {t.answer.sources.length > 0 && <SourceList sources={t.answer.sources} cited={t.answer.cited} focus={focus} />}
-            </div>
-          )}
-        </section>
-      ))}
+            )}
+            <ErrorBox error={t.error} />
+          </section>
+        );
+      })}
       <form
         className="flex flex-wrap gap-2"
         onSubmit={(e) => {
@@ -249,7 +330,7 @@ function InstantResults({ query, area, onAsk }) {
 }
 
 export function SearchPanel() {
-  const { search, closeSearch, scenario, scenarioId, area, setArea, lang } = useApp();
+  const { search, closeSearch, scenarioId, area, setArea, lang } = useApp();
   const [text, setText] = useState(search?.text || "");
   const [question, setQuestion] = useState(search?.ask ? search.text : null);
   const input = useRef(null);
@@ -269,9 +350,7 @@ export function SearchPanel() {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-white animate-aparecer" role="dialog" aria-label={tr("Buscar y preguntar", "Search and ask")}>
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-5 sm:py-8 md:px-8">
         <div className="flex items-center justify-between gap-3">
-          <small className="text-xs uppercase tracking-wide text-gris-oscuro">
-            {tr("Escenario", "Scenario")}: <b className="text-noche">{scenario?.name || "—"}</b>
-          </small>
+          <ScenarioSelect showLabel />
           <button onClick={closeSearch} className="text-4xl leading-none text-gris-oscuro hover:text-noche" aria-label={tr("Cerrar", "Close")}>
             ×
           </button>

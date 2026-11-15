@@ -1,3 +1,5 @@
+import json
+import logging
 import math
 import re
 import sqlite3
@@ -5,21 +7,24 @@ import threading
 import time
 import unicodedata
 from collections import Counter
+from collections.abc import Iterator
 from datetime import date
 from typing import Literal
 
 import anthropic
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from .api import AREAS, fts_query, scenario_or_404
 from .config import settings
-from .db import get_db
+from .db import connect, get_db
 from .limits import limiter
 from .sources import source_link
 
 router = APIRouter(prefix="/api")
+log = logging.getLogger("uvicorn.error")
 
 MAX_FINDINGS = 12
 MAX_PAGES = 4
@@ -29,7 +34,7 @@ STOPWORDS = {"the", "and", "for", "with", "what", "how", "does", "are", "was", "
              "which", "when", "where", "why", "about", "than", "then", "there", "their", "they", "have", "has"}
 
 GLOSSARY = {
-    "helio": "helium", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
+    "helio": "helium", "forma": "shape", "formas": "shape", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
     "llamas": "flame", "humo": "smoke", "hollin": "soot", "apagar": "extinguish extinction", "apaga": "extinguish extinction",
     "apagan": "extinguish extinction", "extincion": "extinction", "extinguir": "extinguish", "extintor": "extinguisher",
     "supresion": "suppression", "supresor": "suppressant", "supresores": "suppressant", "oxigeno": "oxygen",
@@ -147,6 +152,15 @@ def terms(text: str) -> list[str]:
 
 
 CORE_TERMS = set(terms(CORE_WORDS))
+
+
+def local_rewrite(question: str) -> str | None:
+    english = glossary_terms(question)
+    if len(set(terms(english))) >= 2:
+        return english
+    if not english and set(terms(plain(question))) & CORE_TERMS:
+        return question
+    return None
 
 
 def screen(question: str, history: list[dict]) -> str | None:
@@ -275,7 +289,8 @@ def ask_local(system: str, messages: list[dict], max_tokens: int) -> str:
         content = (choice["message"].get("content") or "").strip()
     except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
         local_down_until = time.monotonic() + LOCAL_COOLDOWN_S
-        raise LLMUnavailable(f"modelo local: {type(exc).__name__}") from exc
+        detail = f"HTTP {exc.response.status_code}" if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
+        raise LLMUnavailable(f"modelo local: {detail}") from exc
     if not content:
         raise LLMUnavailable("modelo local sin texto: subir LOCAL_LLM_MAX_TOKENS")
     if choice.get("finish_reason") == "length":
@@ -306,15 +321,148 @@ def ask_anthropic(system: str, messages: list[dict], max_tokens: int) -> str:
 PROVIDERS = {"local": ask_local, "anthropic": ask_anthropic}
 
 
+def provider_order() -> list[str]:
+    return [settings.chat_provider] + [p for p in PROVIDERS if p != settings.chat_provider]
+
+
 def ask(system: str, messages: list[dict], max_tokens: int) -> tuple[str, str]:
-    order = [settings.chat_provider] + [p for p in PROVIDERS if p != settings.chat_provider]
     errors = []
-    for name in order:
+    for name in provider_order():
         try:
             return PROVIDERS[name](system, messages, max_tokens), name
         except LLMUnavailable as exc:
+            log.warning("Proveedor %s no disponible: %s", name, exc)
             errors.append(str(exc))
     raise HTTPException(503, "El asistente no está disponible ahora mismo: " + "; ".join(errors))
+
+
+class ThinkFilter:
+    OPEN, CLOSE = "<think>", "</think>"
+
+    def __init__(self):
+        self.buffer, self.inside = "", False
+
+    def feed(self, chunk: str) -> tuple[str, bool]:
+        self.buffer += chunk
+        visible, thinking = [], False
+        while self.buffer:
+            if self.inside:
+                thinking = True
+                end = self.buffer.find(self.CLOSE)
+                if end < 0:
+                    self.buffer = self.buffer[-(len(self.CLOSE) - 1):]
+                    break
+                self.buffer, self.inside = self.buffer[end + len(self.CLOSE):].lstrip(), False
+                continue
+            start = self.buffer.find(self.OPEN)
+            if start >= 0:
+                visible.append(self.buffer[:start])
+                self.buffer, self.inside = self.buffer[start + len(self.OPEN):], True
+                continue
+            keep = next((k for k in range(len(self.OPEN) - 1, 0, -1) if self.buffer.endswith(self.OPEN[:k])), 0)
+            visible.append(self.buffer[:len(self.buffer) - keep])
+            self.buffer = self.buffer[len(self.buffer) - keep:]
+            break
+        return "".join(visible), thinking
+
+    def flush(self) -> str:
+        rest, self.buffer = ("" if self.inside else self.buffer), ""
+        return rest
+
+
+def stream_local(system: str, messages: list[dict], max_tokens: int) -> Iterator[tuple[str, str]]:
+    global local_down_until
+    if not settings.local_llm_url or not settings.local_llm_model:
+        raise LLMUnavailable("modelo local no configurado")
+    if time.monotonic() < local_down_until:
+        raise LLMUnavailable("modelo local en pausa tras un fallo reciente")
+    headers = {"Authorization": f"Bearer {settings.local_llm_api_key}"} if settings.local_llm_api_key else {}
+    body = {"model": settings.local_llm_model, "max_tokens": max(max_tokens, settings.local_llm_max_tokens), "temperature": 0.2,
+            "stream": True, "messages": [{"role": "system", "content": system}, *messages]}
+    think, started, finish = ThinkFilter(), False, None
+    try:
+        with httpx.stream("POST", f"{settings.local_llm_url}/chat/completions", headers=headers, json=body,
+                          timeout=httpx.Timeout(settings.local_llm_timeout, connect=5.0)) as response:
+            response.raise_for_status()
+            for line in response.iter_lines():
+                if not line.startswith("data:"):
+                    continue
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                choices = json.loads(data).get("choices") or [{}]
+                delta = choices[0].get("delta") or {}
+                finish = choices[0].get("finish_reason") or finish
+                if delta.get("reasoning") or delta.get("reasoning_content"):
+                    yield "thinking", ""
+                visible, thinking = think.feed(delta.get("content") or "")
+                if thinking:
+                    yield "thinking", ""
+                if visible.strip() or (started and visible):
+                    started = True
+                    yield "text", visible
+        tail = think.flush()
+        if tail.strip():
+            started = True
+            yield "text", tail
+    except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
+        local_down_until = time.monotonic() + LOCAL_COOLDOWN_S
+        detail = f"HTTP {exc.response.status_code}" if isinstance(exc, httpx.HTTPStatusError) else type(exc).__name__
+        raise LLMUnavailable(f"modelo local: {detail}") from exc
+    if not started:
+        raise LLMUnavailable("modelo local sin texto: subir LOCAL_LLM_MAX_TOKENS")
+    if finish == "length":
+        yield "text", " […]"
+
+
+def stream_anthropic(system: str, messages: list[dict], max_tokens: int) -> Iterator[tuple[str, str]]:
+    anthropic_budget.take()
+    model = settings.model_chat
+    extra = {} if model.startswith("claude-haiku") else {"betas": [FALLBACK_BETA], "fallbacks": "default"}
+    try:
+        with anthropic_client.beta.messages.stream(
+            model=model,
+            max_tokens=max_tokens,
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
+            messages=messages,
+            output_config={"effort": "low"},
+            **extra,
+        ) as stream:
+            for text in stream.text_stream:
+                yield "text", text
+            final = stream.get_final_message()
+    except anthropic.APIError as exc:
+        raise LLMUnavailable(f"Claude: {type(exc).__name__}") from exc
+    if final.stop_reason == "refusal":
+        raise LLMUnavailable("Claude rechazó la consulta")
+
+
+STREAMERS = {"local": stream_local, "anthropic": stream_anthropic}
+
+
+def ask_stream(system: str, messages: list[dict], max_tokens: int) -> Iterator[dict]:
+    for name in provider_order():
+        parts, thinking = [], False
+        try:
+            for kind, chunk in STREAMERS[name](system, messages, max_tokens):
+                if kind == "thinking":
+                    if not thinking and not parts:
+                        thinking = True
+                        yield {"type": "status", "stage": "thinking", "provider": name}
+                    continue
+                if not parts:
+                    yield {"type": "status", "stage": "writing", "provider": name}
+                parts.append(chunk)
+                yield {"type": "delta", "text": chunk}
+        except LLMUnavailable as exc:
+            log.warning("Proveedor %s no disponible: %s", name, exc)
+            if parts:
+                yield {"type": "error", "status": 503, "partial": True}
+                return
+            continue
+        yield {"type": "answer", "text": "".join(parts).strip(), "provider": name}
+        return
+    yield {"type": "error", "status": 503}
 
 
 def render_sources(findings: list[dict], pages: list[dict]) -> tuple[str, list[dict]]:
@@ -362,35 +510,92 @@ def search_all(
     return {"query": q, "search_query": query, "findings": findings, "pages": pages, "investigations": investigations[:6]}
 
 
-@router.post("/chat")
-@limiter.limit("8/minute;60/day")
-def chat(request: Request, body: ChatRequest, db: sqlite3.Connection = Depends(get_db)) -> dict:
-    scenario = scenario_or_404(db, body.scenario)
+def early_reply(body: ChatRequest) -> dict | None:
+    reason = screen(body.question, [t.model_dump() for t in body.history])
+    if not reason:
+        return None
+    return {"answer": MESSAGES[body.lang][reason], "sources": [], "cited": [], "provider": None, "search_query": "",
+            "off_topic": reason, "notice": None}
+
+
+def retrieve(db: sqlite3.Connection, body: ChatRequest, scenario: dict | None) -> dict:
     text = MESSAGES[body.lang]
-    history = [t.model_dump() for t in body.history]
-    reason = screen(body.question, history)
-    if reason:
-        return {"answer": text[reason], "sources": [], "cited": [], "provider": None, "search_query": "",
-                "off_topic": reason, "notice": None}
     notice = text["earth"] if EARTH_PATTERN.search(plain(body.question)) else None
-    rewrite, provider = ask(REWRITE_SYSTEM, [{"role": "user", "content": body.question}], 100)
-    rewrite = clean_rewrite(rewrite)
-    query = " ".join(part for part in (rewrite, glossary_terms(body.question)) if part) or body.question
+    rewrite, provider = local_rewrite(body.question), None
+    if rewrite is None:
+        raw, provider = ask(REWRITE_SYSTEM, [{"role": "user", "content": body.question}], 100)
+        rewrite = clean_rewrite(raw)
+    query = " ".join(part for part in dict.fromkeys((rewrite, glossary_terms(body.question))) if part) or body.question
     findings = finding_index.search(db, body.question, rewrite, body.area)
     pages = search_pages(db, query)
     if not findings and not pages:
-        return {"answer": text["no_evidence"], "sources": [], "cited": [], "provider": provider, "search_query": query,
-                "off_topic": None, "notice": notice}
+        return {"reply": {"answer": text["no_evidence"], "sources": [], "cited": [], "provider": provider,
+                          "search_query": query, "off_topic": None, "notice": notice}}
     context, sources = render_sources(findings, pages)
     scenario_line = (f"Mission scenario: {scenario['name']} ({scenario['o2_fraction'] * 100:.1f}% O2, "
                      f"{scenario['pressure_kpa']} kPa, {scenario['gravity_g']} g)\n\n") if scenario else ""
+    history = [t.model_dump() for t in body.history]
     messages = history + [{"role": "user", "content": f"{scenario_line}Sources:\n{context}\n\nQuestion: {body.question}"}]
-    system = ANSWER_SYSTEM.replace("{language}", LANGUAGES[body.lang])
-    answer, provider = ask(system, messages, 1200)
+    return {"sources": sources, "messages": messages, "query": query, "notice": notice,
+            "system": ANSWER_SYSTEM.replace("{language}", LANGUAGES[body.lang])}
+
+
+def finish(prepared: dict, answer: str, provider: str) -> dict:
     answer = re.sub(r"\s*\[(?:Regla|Rule|Norma)\s*\d+\]", "", answer)
+    sources = prepared["sources"]
     cited = sorted({int(n) for n in re.findall(r"\[(\d+)\]", answer) if 0 < int(n) <= len(sources)})
     for source in sources:
         source["cited"] = source["n"] in cited
     sources.sort(key=lambda s: (not s["cited"], -s["relevance"]))
-    return {"answer": answer, "sources": sources, "cited": cited, "provider": provider, "search_query": query,
-            "off_topic": None, "notice": notice}
+    return {"answer": answer, "sources": sources, "cited": cited, "provider": provider, "search_query": prepared["query"],
+            "off_topic": None, "notice": prepared["notice"]}
+
+
+@router.post("/chat")
+@limiter.limit("8/minute;60/day")
+def chat(request: Request, body: ChatRequest, db: sqlite3.Connection = Depends(get_db)) -> dict:
+    scenario = scenario_or_404(db, body.scenario)
+    reply = early_reply(body)
+    if reply:
+        return reply
+    prepared = retrieve(db, body, scenario)
+    if "reply" in prepared:
+        return prepared["reply"]
+    answer, provider = ask(prepared["system"], prepared["messages"], 1200)
+    return finish(prepared, answer, provider)
+
+
+def chat_events(body: ChatRequest, scenario: dict | None) -> Iterator[dict]:
+    reply = early_reply(body)
+    if reply:
+        yield {"type": "done", **reply}
+        return
+    db = connect()
+    try:
+        yield {"type": "status", "stage": "searching"}
+        prepared = retrieve(db, body, scenario)
+        if "reply" in prepared:
+            yield {"type": "done", **prepared["reply"]}
+            return
+        yield {"type": "sources", "sources": prepared["sources"], "search_query": prepared["query"], "notice": prepared["notice"]}
+        for event in ask_stream(prepared["system"], prepared["messages"], 1200):
+            if event["type"] == "answer":
+                yield {"type": "done", **finish(prepared, event["text"], event["provider"])}
+            else:
+                yield event
+    except HTTPException as exc:
+        yield {"type": "error", "status": exc.status_code}
+    except Exception:
+        log.exception("Fallo en el asistente")
+        yield {"type": "error", "status": 500}
+    finally:
+        db.close()
+
+
+@router.post("/chat/stream")
+@limiter.limit("8/minute;60/day")
+def chat_stream(request: Request, body: ChatRequest, db: sqlite3.Connection = Depends(get_db)) -> StreamingResponse:
+    scenario = scenario_or_404(db, body.scenario)
+    lines = (json.dumps(event, ensure_ascii=False) + "\n" for event in chat_events(body, scenario))
+    return StreamingResponse(lines, media_type="application/x-ndjson",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

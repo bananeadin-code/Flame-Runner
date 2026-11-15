@@ -45,7 +45,7 @@ VITE_API_URL=https://tu-backend.onrender.com npm run build
 | Ambiente operativo | `/api/investigations` (rangos de O₂, presión y flujo) |
 | Mediciones | `/api/measurements`, `/api/measurements?quantity` |
 | Documentos y publicaciones | `/api/library`, `/api/investigations/{acc}` |
-| Buscador | `/api/search/all?q&area` y `POST /api/chat` (con `lang` es/en) |
+| Buscador | `/api/search/all?q&area` y `POST /api/chat/stream` (con `lang` es/en) |
 | Visor de fuente | `/api/documents/{id}/pages/{n}?quote` |
 
 ## Idioma
@@ -54,4 +54,8 @@ El selector ES/EN de la cabecera cambia todo el sitio y el idioma de las respues
 
 ## Asistente de evidencia
 
-`POST /api/chat` filtra antes de llamar al modelo: las preguntas sin relación con el fuego en el espacio, las peticiones creativas o de código y los intentos de cambiar sus instrucciones reciben una respuesta fija con `off_topic` (`scope`, `task` o `manipulation`) y el panel muestra preguntas sugeridas. Si la pregunta parece una emergencia real en la Tierra, la respuesta incluye un aviso en `notice`.
+`POST /api/chat/stream` devuelve la respuesta por partes (una línea JSON por evento: `status`, `sources`, `delta`, `done` o `error`), así el panel muestra el avance y va escribiendo el texto mientras el modelo lo genera; `POST /api/chat` sigue disponible con la respuesta completa de una vez. Antes de llamar al modelo filtra la pregunta: las preguntas sin relación con el fuego en el espacio, las peticiones creativas o de código y los intentos de cambiar sus instrucciones reciben una respuesta fija con `off_topic` (`scope`, `task` o `manipulation`) y el panel muestra preguntas sugeridas. Si la pregunta parece una emergencia real en la Tierra, la respuesta incluye un aviso en `notice`.
+
+## Imágenes en las respuestas
+
+Bajo cada respuesta con citas se muestran hasta tres imágenes de la NASA. Las elige `src/lib/images.js` con el catálogo `ANSWER_IMAGES` de `src/content/media.js`: cada imagen tiene las investigaciones PSI a las que pertenece y palabras clave en inglés que se comparan con la búsqueda del asistente. Solo aparece una imagen si coincide con el tema, y suma más si alguna fuente citada es de su investigación. Las fotos de `public/media/psi` son las imágenes representativas públicas del repositorio PSI. Para añadir una imagen basta con ponerla en `public/media`, declararla en `MEDIA` y añadir su fila en `ANSWER_IMAGES`.
