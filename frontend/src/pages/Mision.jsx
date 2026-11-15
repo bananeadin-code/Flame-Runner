@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../state/context";
 import { useApi } from "../lib/useApi";
-import { AREA_LABEL, AREAS, FUEL_CLASS_LABEL, GRAVITY_LABEL, label } from "../lib/format";
+import { AREA_LABEL, AREA_TOPIC, AREAS, FUEL_CLASS_LABEL, GRAVITY_LABEL, label, num } from "../lib/format";
 import { AGENTES, CONTEXTO_EXTINTORES } from "../content/narrative";
 import { MEDIA } from "../content/media";
 import { pick, tr } from "../lib/i18n";
@@ -11,6 +11,7 @@ import { Bars, Card, ErrorBox, Figure, Kpi, KpiRow, Loading, Note, Reveal, Secti
 import { Link } from "../components/Link";
 
 function PartialGravity() {
+  const { scenario } = useApp();
   const { data } = useApi("/api/gravity-bounds");
   const { data: compared } = useApi("/api/findings", { q: "normal gravity", limit: 4 });
   return (
@@ -86,7 +87,18 @@ function PartialGravity() {
         </>
       )}
       <div className="mt-6">
-        <AskButton question={tr("¿Cómo se puede estimar el comportamiento del fuego en la Luna con datos de microgravedad y de la Tierra?", "How can fire behavior on the Moon be estimated from microgravity and Earth data?")} />
+        <AskButton
+          question={
+            scenario?.gravity_g > 0
+              ? tr(
+                  `¿Cómo se puede estimar el comportamiento del fuego en ${scenario.name}, a ${num(scenario.gravity_g, undefined, 3)} g, con datos de microgravedad y de la Tierra?`,
+                  `How can fire behavior in ${scenario.name}, at ${num(scenario.gravity_g, undefined, 3)} g, be estimated from microgravity and Earth data?`,
+                )
+              : tr("¿Cómo cambiaría el fuego en la gravedad parcial de la Luna o de Marte respecto a la microgravedad?", "How would fire change in the partial gravity of the Moon or Mars compared with microgravity?")
+          }
+        >
+          {scenario?.gravity_g > 0 ? tr(`Preguntar por la gravedad de ${scenario.name}`, `Ask about gravity in ${scenario.name}`) : tr("Preguntar por la gravedad parcial", "Ask about partial gravity")}
+        </AskButton>
       </div>
     </>
   );
@@ -96,10 +108,10 @@ const FUEL_CLASSES = ["solid", "droplet", "gas", "aerosol"];
 const AGENT_QUERY = { He: "helium", CO2: "CO2", N2: "nitrogen", Xe: "xenon", Ar: "argon" };
 
 export function Riesgos() {
-  const { scenarioId, scenarios, area } = useApp();
+  const { scenarioId, scenario, scenarios, area } = useApp();
   const { data, error, loading } = useApi("/api/gaps");
   const gravity = {};
-  data?.gravity_coverage.forEach((g) => {
+  data?.gravity_coverage.filter((g) => !area || g.area === area).forEach((g) => {
     gravity[g.gravity || "unspecified"] = (gravity[g.gravity || "unspecified"] || 0) + g.findings;
   });
   const areas = area ? [area] : AREAS;
@@ -142,10 +154,17 @@ export function Riesgos() {
                     <td className="sticky left-0 bg-white p-3">{label(FUEL_CLASS_LABEL, fc)}</td>
                     {scenarios.map((s) => {
                       const cell = data.scenario_coverage.find((c) => c.scenario === s.id && c.fuel_class === fc);
-                      const empty = cell?.tests_in_scenario === 0;
+                      const unknown = cell && cell.tests_with_o2 === 0;
+                      const empty = cell && !unknown && cell.tests_in_scenario === 0;
                       return (
                         <td key={s.id} className={`p-3 tabular-nums ${empty ? "bg-rojo/10 font-semibold text-rojo" : ""} ${s.id === scenarioId ? "ring-2 ring-azul ring-inset" : ""}`}>
-                          {cell?.tests_in_scenario ?? "—"} <span className="font-normal text-gris-oscuro">/ {cell?.tests ?? "—"}</span>
+                          {unknown ? (
+                            <span className="text-xs text-gris-oscuro">{tr("sin O₂ registrado", "no O₂ recorded")}</span>
+                          ) : (
+                            <>
+                              {cell?.tests_in_scenario ?? "—"} <span className="font-normal text-gris-oscuro">/ {cell?.tests_with_o2 ?? "—"}</span>
+                            </>
+                          )}
                         </td>
                       );
                     })}
@@ -153,6 +172,22 @@ export function Riesgos() {
                 ))}
               </tbody>
             </table>
+          </div>
+          <Note>
+            {tr(
+              "Cada celda: pruebas dentro del escenario / pruebas con oxígeno registrado. Una prueba está dentro si su oxígeno está a ±3 puntos y su presión a ±15 % (o la presión no se registró). Las pruebas de humo y aerosoles de SAME y DAFT no registran oxígeno, así que no se pueden ubicar en ningún escenario.",
+              "Each cell: tests within the scenario / tests with recorded oxygen. A test is within if its oxygen is within ±3 points and its pressure within ±15 % (or pressure was not recorded). The SAME and DAFT smoke and aerosol tests do not record oxygen, so they cannot be placed in any scenario.",
+            )}
+          </Note>
+          <div className="mt-4">
+            <AskButton
+              question={tr(
+                `¿Qué tipos de prueba faltan para ${scenario?.name || "este escenario"} y por qué importan para la seguridad contra incendios?`,
+                `Which kinds of tests are missing for ${scenario?.name || "this scenario"} and why do they matter for fire safety?`,
+              )}
+            >
+              {tr("Preguntar qué falta probar", "Ask what is left to test")}
+            </AskButton>
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -163,6 +198,7 @@ export function Riesgos() {
                   label: label(AREA_LABEL, a.area),
                   value: a.findings,
                   text: `${a.findings} · ${a.gaps} ${tr("huecos", "gaps")}`,
+                  tone: area && a.area === area ? "rojo" : "",
                 }))}
               />
               <Note>{tr("Hallazgos verificados por área y cuántos de ellos son huecos de conocimiento señalados por los propios autores.", "Verified findings by area and how many of them are knowledge gaps flagged by the authors themselves.")}</Note>
@@ -184,7 +220,12 @@ export function Riesgos() {
 
           <PartialGravity />
 
-          <SectionTitle sub={tr("Limitaciones y preguntas abiertas que los investigadores dejaron escritas, con su cita literal.", "Limitations and open questions the researchers wrote down, with their exact quote.")}>
+          <SectionTitle
+            sub={tr(
+              "Limitaciones y preguntas abiertas que los investigadores dejaron escritas, con su cita literal. Son generales: no dependen del escenario elegido.",
+              "Limitations and open questions the researchers wrote down, with their exact quote. They are general: they do not depend on the chosen scenario.",
+            )}
+          >
             {tr("Huecos señalados por los autores", "Gaps flagged by the authors")}
           </SectionTitle>
           {areas.map((a) => (
@@ -196,6 +237,16 @@ export function Riesgos() {
                     <FindingCard finding={f} compact />
                   </Reveal>
                 ))}
+              </div>
+              <div className="mt-3">
+                <AskButton
+                  question={tr(
+                    `¿Qué falta por investigar en ${pick(AREA_TOPIC[a])} para ${scenario?.name || "misiones espaciales"}?`,
+                    `What is still missing in ${pick(AREA_TOPIC[a])} research for ${scenario?.name || "space missions"}?`,
+                  )}
+                >
+                  {tr(`Preguntar por los huecos de ${label(AREA_LABEL, a).toLowerCase()}`, `Ask about ${label(AREA_LABEL, a).toLowerCase()} gaps`)}
+                </AskButton>
               </div>
             </div>
           ))}
@@ -244,12 +295,19 @@ export function Recomendacion() {
       <MissionBar />
       <div className="mb-8">
         <AskButton
-          question={tr(
-            `¿Qué recomendaciones de seguridad contra incendios da la evidencia para ${scenario?.name || "este escenario"}?`,
-            `What fire safety recommendations does the evidence give for ${scenario?.name || "this scenario"}?`,
-          )}
+          question={
+            area
+              ? tr(
+                  `¿Qué recomendaciones de ${pick(AREA_TOPIC[area])} da la evidencia para ${scenario?.name || "este escenario"}?`,
+                  `What ${pick(AREA_TOPIC[area])} recommendations does the evidence give for ${scenario?.name || "this scenario"}?`,
+                )
+              : tr(
+                  `¿Qué recomendaciones de seguridad contra incendios da la evidencia para ${scenario?.name || "este escenario"}?`,
+                  `What fire safety recommendations does the evidence give for ${scenario?.name || "this scenario"}?`,
+                )
+          }
         >
-          {tr("Pedir un resumen al asistente", "Ask the assistant for a summary")}
+          {area ? tr(`Pedir un resumen de ${label(AREA_LABEL, area).toLowerCase()}`, `Ask for a ${label(AREA_LABEL, area).toLowerCase()} summary`) : tr("Pedir un resumen al asistente", "Ask the assistant for a summary")}
         </AskButton>
       </div>
       {areas.map((a) => (

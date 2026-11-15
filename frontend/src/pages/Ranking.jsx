@@ -374,7 +374,7 @@ export function Comparar({ query }) {
       )}
       {items.length >= 2 && (
         <div className="mt-8">
-          <AskButton question={tr(`¿En qué se parecen y en qué se diferencian ${items.map((i) => i.acronym || i.accession).join(", ")}?`, `How are ${items.map((i) => i.acronym || i.accession).join(", ")} similar and how do they differ?`)}>
+          <AskButton question={tr(`¿En qué se parecen y en qué se diferencian las investigaciones ${items.map((i) => i.acronym || i.accession).join(", ")}?`, `How are the investigations ${items.map((i) => i.acronym || i.accession).join(", ")} similar and how do they differ?`)}>
             {tr("Pedir al asistente una comparación", "Ask the assistant for a comparison")}
           </AskButton>
         </div>
