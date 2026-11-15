@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+@theme {
+  --color-rojo: #ff3b3b;
+  --color-rojo-claro: #ff9b8a;
+  --color-azul: #0563b5;
+  --color-azul-claro: #2a86da;
+  --color-azul-palido: #7fb6ea;
+  --color-noche: #00020f;
+  --color-noche-2: #021235;
+  --color-claro: #f1f1f3;
+  --color-linea: #d9d9dd;
+  --color-gris: #b0b0b2;
+  --color-gris-oscuro: #4a4f63;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "Segoe UI", system-ui, Arial, sans-serif;
+  --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-subir: subir 0.9s var(--ease-suave) both;
+  --animate-aparecer: aparecer 0.4s var(--ease-suave) both;
+}
+
+@keyframes subir {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes aparecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-white font-sans text-noche antialiased; }
+  h1, h2, h3, h4 { @apply font-serif leading-tight; }
+  :focus-visible { @apply outline-3 outline-offset-2 outline-rojo; }
+}
+
+@layer components {
+  .revelar { opacity: 0; transform: translateY(24px); transition: opacity 0.8s var(--ease-suave), transform 0.8s var(--ease-suave); }
+  .revelar.visible { opacity: 1; transform: none; }
+  .marca { @apply rounded-sm bg-rojo/20 px-0.5 text-noche; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .revelar { opacity: 1; transform: none; transition: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

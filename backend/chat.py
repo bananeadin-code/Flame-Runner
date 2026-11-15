@@ -2,22 +2,22 @@ import math
 import re
 import sqlite3
 import threading
-import unicodedata
 import time
+import unicodedata
 from collections import Counter
 from datetime import date
 from typing import Literal
-from .sources import source_link
 
 import anthropic
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from .api import AREAS, fts_query, scenario_or_404
 from .config import settings
 from .db import get_db
 from .limits import limiter
+from .sources import source_link
 
 router = APIRouter(prefix="/api")
 
@@ -137,13 +137,16 @@ class FindingIndex:
             if key not in seen:
                 seen.add(key)
                 results.append(item | {"relevance": round(score / top, 3)})
+            if len(results) == MAX_FINDINGS:
+                break
+        return results
 
 
 finding_index = FindingIndex()
 
 
 def search_pages(db: sqlite3.Connection, query: str) -> list[dict]:
-    sql = """SELECT p.page_no, d.id AS document_id, d.title AS document_title, d.accession, d.path AS document_path
+    sql = """SELECT p.page_no, d.id AS document_id, d.title AS document_title, d.accession, d.path AS document_path,
                     snippet(pages_fts, 0, '', '', '…', 60) AS excerpt
              FROM pages_fts JOIN pages p ON p.id = pages_fts.rowid JOIN documents d ON d.id = p.document_id
              WHERE pages_fts MATCH ? ORDER BY bm25(pages_fts) LIMIT ?"""
@@ -162,6 +165,7 @@ def search_pages(db: sqlite3.Connection, query: str) -> list[dict]:
         if unique:
             return unique
     return []
+
 
 def looks_like_references(text: str) -> bool:
     markers = re.findall(r"\(\d{4}\)|\bpp\.|Proceedings|Journal|et al\.|\d+:\d+[–-]\d+", text)
@@ -268,6 +272,31 @@ def render_sources(findings: list[dict], pages: list[dict]) -> tuple[str, list[d
                         **source_link(p["document_path"], p["accession"])})
         blocks.append(f"[{n}] Excerpt ({p['document_title']}, p. {p['page_no']}): {p['excerpt']}")
     return "\n".join(blocks), sources
+
+@router.get("/search/all")
+def search_all(
+    q: str = Query(..., min_length=2, max_length=200),
+    area: str | None = Query(None, pattern=f"^({'|'.join(AREAS)})$"),
+    db: sqlite3.Connection = Depends(get_db),
+) -> dict:
+    english = glossary_terms(q)
+    query = " ".join(part for part in (q, english) if part)
+    found = finding_index.search(db, q, q, area)[:8]
+    findings = [{"finding_id": f["id"], "accession": f["accession"], "statement": f["statement"], "quote": f["quote"],
+                 "safety_area": f["safety_area"], "finding_type": f["finding_type"], "relevance": f["relevance"],
+                 "document_id": f["document_id"], "document_title": f["document_title"], "page_no": f["page_no"],
+                 **source_link(f["document_path"], f["accession"])} for f in found]
+    pages = [{"document_id": p["document_id"], "document_title": p["document_title"], "page_no": p["page_no"],
+              "accession": p["accession"], "excerpt": p["excerpt"], **source_link(p["document_path"], p["accession"])}
+             for p in search_pages(db, query)]
+    words = set(terms(query))
+    investigations = []
+    for inv in db.execute("SELECT accession, acronym, title, primary_area FROM investigations").fetchall():
+        haystack = set(terms(f"{inv['accession']} {inv['acronym'] or ''} {inv['title']}"))
+        if words & haystack or q.strip().lower() in f"{inv['accession']} {inv['acronym'] or ''}".lower():
+            investigations.append(dict(inv))
+    return {"query": q, "search_query": query, "findings": findings, "pages": pages, "investigations": investigations[:6]}
+
 
 @router.post("/chat")
 @limiter.limit("8/minute;60/day")
