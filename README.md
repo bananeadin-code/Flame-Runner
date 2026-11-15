@@ -1,13 +1,13 @@
 Flame Runner
 
-Flame Runner es nuestro proyecto para el NASA Space Apps Challenge 2026, dentro del reto Flame in Freefall.
+Flame Runner is our project for the NASA Space Apps Challenge 2026, part of the Flame in Freefall challenge.
 
-En la Tierra, el aire caliente sube y alimenta la llama, pero en una nave espacial esa corriente no existe. Allí el fuego cambia de forma, es más difícil de ver y se apaga de otra manera. La NASA lleva décadas estudiándolo en la Estación Espacial, pero sus resultados están repartidos en miles de documentos técnicos que pocas personas pueden revisar a fondo.
+On Earth, hot air rises and feeds the flame, but on a spacecraft that airflow does not exist. There, fire changes shape, becomes harder to see, and goes out in a different way. NASA has been studying this for decades on the Space Station, but the results are spread across thousands of technical documents that few people can review in depth.
 
-Para resolverlo, reunimos esos documentos del repositorio público de la NASA en una sola base de datos, con 24 investigaciones, más de dos mil pruebas y más de diez mil páginas. De ahí extrajimos 1 568 hallazgos, y cada uno lo comprobamos contra el texto original antes de aceptarlo.
+To solve this, we gathered those documents from NASA's public repository into a single database, with 24 investigations, more than two thousand tests, and more than ten thousand pages. From it we extracted 1,568 findings, and we checked each one against the original text before accepting it.
 
-Con esa base construimos un sitio donde eliges un escenario de misión, como la Estación Espacial, un hábitat en la Luna o uno en Marte, y ves qué se ha probado en esas condiciones y qué falta por investigar. También incluye un asistente al que puedes preguntarle en español o en inglés. El asistente no inventa: busca en la base de datos, responde solo con lo que dicen los documentos de la NASA y cita cada dato, de modo que puedes abrir la página original de donde sale. Si la pregunta no tiene que ver con el fuego en el espacio, simplemente no la responde.
+With that database we built a site where you choose a mission scenario, such as the Space Station, a habitat on the Moon, or one on Mars, and see what has been tested under those conditions and what still needs research. It also includes an assistant you can ask in English or Spanish. The assistant does not make things up: it searches the database, answers only with what NASA documents say, and cites every piece of data, so you can open the original page it comes from. If a question has nothing to do with fire in space, it simply does not answer it.
 
-Uno de los hallazgos más claros es que casi toda la evidencia viene de la microgravedad. Para la gravedad de la Luna y de Marte, y con el oxígeno previsto para esos hábitats, prácticamente no hay pruebas, y esa es justamente una de las prioridades que el sitio ayuda a ver.
+One of the clearest findings is that almost all the evidence comes from microgravity. For lunar and Martian gravity, and with the oxygen levels planned for those habitats, there are practically no tests, and that is exactly one of the priorities the site helps bring to light.
 
-El proyecto usa Python con FastAPI y SQLite en el backend, y React con Tailwind en el frontend. El asistente funciona con Gemma 4 en un servidor del equipo y usa Claude como respaldo. Todos los datos e imágenes son de la NASA.
+The project uses Python with FastAPI and SQLite on the backend, and React with Tailwind on the frontend. The assistant runs on Gemma 4 on a team server and uses Claude as a fallback. All data and images come from NASA.
