@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useRoute } from "./lib/route";
 import { useApp } from "./state/context";
+import { tr } from "./lib/i18n";
 import { Header, Menu } from "./components/Layout";
 import { PAGES } from "./lib/pages";
 import { SearchPanel } from "./components/SearchPanel";
@@ -38,12 +39,18 @@ export default function App() {
   return (
     <>
       <Header route={name} onMenu={() => setMenu(true)} />
-      <main key={name}>
+      <main key={name} className="overflow-x-clip">
         <View query={query} />
       </main>
-      <footer className="bg-noche px-5 py-10 text-sm text-white/70 md:px-8">
+      <footer className="bg-noche px-4 py-10 text-sm text-white/70 sm:px-5 md:px-8">
         <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 md:flex-row">
-          <p>Datos: NASA Physical Sciences Informatics (PSI), Combustion Science. Imágenes: NASA. NASA Space Apps Challenge 2026 · Flame in Freefall.</p>
+          <p>
+            <b className="font-serif text-white">Flame Runner</b> ·{" "}
+            {tr(
+              "Datos: NASA Physical Sciences Informatics (PSI), Combustion Science. Imágenes: NASA. NASA Space Apps Challenge 2026 · reto Flame in Freefall.",
+              "Data: NASA Physical Sciences Informatics (PSI), Combustion Science. Images: NASA. NASA Space Apps Challenge 2026 · Flame in Freefall challenge.",
+            )}
+          </p>
           <a href="https://psi.nasa.gov/physci/repo/" target="_blank" rel="noreferrer" className="hover:text-white">
             psi.nasa.gov ↗
           </a>

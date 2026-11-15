@@ -1,3 +1,5 @@
+import { tr } from "./i18n";
+
 const BASE = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
 export class ApiError extends Error {
@@ -22,7 +24,7 @@ async function request(path, options = {}) {
     response = await fetch(`${BASE}${path}`, options);
   } catch (error) {
     if (error.name === "AbortError") throw error;
-    throw new ApiError(0, "No se pudo conectar con el servidor.");
+    throw new ApiError(0, tr("No se pudo conectar con el servidor.", "Could not connect to the server."));
   }
   if (!response.ok) {
     let detail = response.statusText;
@@ -32,7 +34,8 @@ async function request(path, options = {}) {
     } catch {
       detail = response.statusText;
     }
-    if (response.status === 429) detail = "Has alcanzado el límite de consultas. Espera un momento e inténtalo de nuevo.";
+    if (response.status === 429) detail = tr("Has alcanzado el límite de consultas. Espera un momento e inténtalo de nuevo.", "You have reached the query limit. Wait a moment and try again.");
+    if (response.status === 503) detail = tr("El asistente no está disponible ahora mismo. Inténtalo de nuevo en unos minutos.", "The assistant is not available right now. Try again in a few minutes.");
     throw new ApiError(response.status, detail);
   }
   return response.json();

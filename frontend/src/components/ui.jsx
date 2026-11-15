@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { num } from "../lib/format";
+import { pick, tr } from "../lib/i18n";
 
 export function Reveal({ as: Tag = "div", delay = 0, className = "", children, ...props }) {
   const ref = useRef(null);
@@ -48,8 +49,8 @@ export function CountUp({ value, digits = 0, suffix = "" }) {
 
 export function Kpi({ value, label, note, digits = 0, suffix = "", tone = "" }) {
   return (
-    <div className="border-l-2 border-linea py-1 pl-4">
-      <b className={`block font-serif text-4xl leading-none ${tone === "rojo" ? "text-rojo" : tone === "azul" ? "text-azul" : ""}`}>
+    <div className="min-w-0 border-l-2 border-linea py-1 pl-3 sm:pl-4">
+      <b className={`block font-serif text-3xl leading-none sm:text-4xl ${tone === "rojo" ? "text-rojo" : tone === "azul" ? "text-azul" : ""}`}>
         <CountUp value={value} digits={digits} suffix={suffix} />
       </b>
       <small className="mt-2 block text-sm text-gris-oscuro">{label}</small>
@@ -59,7 +60,7 @@ export function Kpi({ value, label, note, digits = 0, suffix = "", tone = "" }) 
 }
 
 export function KpiRow({ children }) {
-  return <div className="my-8 grid grid-cols-2 gap-6 md:grid-cols-4">{children}</div>;
+  return <div className="my-8 grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-6 lg:grid-cols-4">{children}</div>;
 }
 
 export function Bars({ items, max, onSelect, selected }) {
@@ -80,7 +81,7 @@ export function Bars({ items, max, onSelect, selected }) {
             <b className="text-right text-sm tabular-nums">{item.text ?? num(item.value)}</b>
           </>
         );
-        const cls = `grid grid-cols-[minmax(6rem,11rem)_1fr_minmax(4.5rem,auto)] items-center gap-3 ${onSelect ? "w-full rounded-md px-2 py-1 text-left transition hover:bg-claro" : ""} ${active ? "bg-claro ring-1 ring-azul" : ""}`;
+        const cls = `grid grid-cols-[minmax(5rem,11rem)_1fr_minmax(3.5rem,auto)] items-center gap-2 sm:gap-3 ${onSelect ? "w-full rounded-md px-2 py-1 text-left transition hover:bg-claro" : ""} ${active ? "bg-claro ring-1 ring-azul" : ""}`;
         return onSelect ? (
           <button key={item.key ?? item.label} className={cls} onClick={() => onSelect(item.key)}>
             {content}
@@ -118,9 +119,9 @@ export function ChipRow({ children, label }) {
 
 export function Card({ title, children, className = "", aside }) {
   return (
-    <div className={`rounded-xl border border-linea bg-white p-6 ${className}`}>
+    <div className={`min-w-0 rounded-xl border border-linea bg-white p-4 sm:p-6 ${className}`}>
       {(title || aside) && (
-        <div className="mb-4 flex items-baseline justify-between gap-4">
+        <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
           {title && <h3 className="text-xl">{title}</h3>}
           {aside}
         </div>
@@ -130,11 +131,11 @@ export function Card({ title, children, className = "", aside }) {
   );
 }
 
-export function Loading({ text = "Cargando datos…" }) {
+export function Loading({ text }) {
   return (
     <div className="flex items-center gap-3 py-8 text-gris-oscuro" role="status">
       <span className="size-4 animate-spin rounded-full border-2 border-linea border-t-rojo" />
-      {text}
+      {text || tr("Cargando datos…", "Loading data…")}
     </div>
   );
 }
@@ -143,7 +144,7 @@ export function ErrorBox({ error }) {
   if (!error) return null;
   return (
     <div className="my-4 rounded-lg border border-rojo/40 bg-rojo/5 p-4 text-sm" role="alert">
-      <b>No se pudieron cargar los datos.</b> {error.message}
+      <b>{tr("No se pudieron cargar los datos.", "The data could not be loaded.")}</b> {error.message}
     </div>
   );
 }
@@ -165,11 +166,11 @@ export function Tag({ children, tone = "gris" }) {
 export function Figure({ media, className = "", imgClassName = "" }) {
   return (
     <figure className={className}>
-      <img src={media.src} alt={media.alt} loading="lazy" className={`w-full rounded-xl bg-noche object-cover ${imgClassName}`} />
+      <img src={media.src} alt={pick(media.alt)} loading="lazy" className={`w-full rounded-xl bg-noche object-cover ${imgClassName}`} />
       <figcaption className="mt-2 text-xs text-gris-oscuro">
-        {media.alt}.{" "}
+        {pick(media.alt)}.{" "}
         <a href={media.url} target="_blank" rel="noreferrer" className="underline decoration-linea underline-offset-2 hover:decoration-noche">
-          {media.credit} ↗
+          {pick(media.credit)} ↗
         </a>
       </figcaption>
     </figure>
@@ -178,8 +179,8 @@ export function Figure({ media, className = "", imgClassName = "" }) {
 
 export function SectionTitle({ children, sub }) {
   return (
-    <div className="mt-14 mb-4">
-      <h2 className="text-3xl">{children}</h2>
+    <div className="mt-12 mb-4 sm:mt-14">
+      <h2 className="text-2xl sm:text-3xl">{children}</h2>
       {sub && <p className="mt-2 max-w-3xl text-gris-oscuro">{sub}</p>}
     </div>
   );

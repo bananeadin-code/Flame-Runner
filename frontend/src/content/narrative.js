@@ -1,10 +1,24 @@
+export const SCENARIO_TEXT = {
+  iss: { name: ["ISS (nominal)", "ISS (nominal)"], notes: ["Atmósfera estándar a nivel del mar", "Standard sea-level atmosphere"] },
+  eva_staging: { name: ["Preparación de EVA", "EVA preparation"], notes: ["10.2 psia, usada antes de paseos espaciales", "10.2 psia, used before spacewalks"] },
+  lunar: { name: ["Hábitat lunar (Artemis)", "Lunar habitat (Artemis)"], notes: ["Atmósfera de exploración recomendada: 8.2 psia, 34 % O2", "Recommended exploration atmosphere: 8.2 psia, 34 % O2"] },
+  mars: { name: ["Hábitat en Marte", "Mars habitat"], notes: ["Misma atmósfera de exploración, gravedad marciana", "Same exploration atmosphere, Martian gravity"] },
+};
+
+export const EXAMPLES = [
+  ["¿El helio sirve para apagar fuegos en microgravedad?", "Can helium put out fires in microgravity?"],
+  ["¿Qué materiales se apagan solos con poco flujo de aire?", "Which materials self-extinguish at low airflow?"],
+  ["¿Cómo se detecta el humo en una nave?", "How is smoke detected on a spacecraft?"],
+  ["¿Qué pasa con una llama a 34 % de oxígeno?", "What happens to a flame at 34 % oxygen?"],
+];
+
 export const HITOS = [
-  ["1967", "Apolo 1", "Un incendio en tierra, con oxígeno puro, cambia el diseño de las cápsulas."],
-  ["1997", "Incendio en la Mir", "Un generador de oxígeno se prende y el humo llena un módulo durante horas."],
-  ["2003", "Mist en el Columbia", "El proyecto Water Mist mide cómo las microgotas de agua frenan la llama."],
-  ["2015", "Agua nebulizada en la ISS", "Los primeros extintores portátiles de agua nebulizada llegan para sustituir las unidades de CO₂."],
-  ["2016", "Saffire I", "Se enciende fuego controlado en una nave de carga para estudiarlo."],
-  ["Hoy", "Protocolos actuales", "Detección por capas y simulaciones con datos de los experimentos."],
+  ["1967", ["Apolo 1", "Apollo 1"], ["Un incendio en tierra, con oxígeno puro, cambia el diseño de las cápsulas.", "A ground fire in pure oxygen changes how capsules are designed."]],
+  ["1997", ["Incendio en la Mir", "Fire on Mir"], ["Un generador de oxígeno se prende y el humo llena un módulo durante horas.", "An oxygen generator catches fire and smoke fills a module for hours."]],
+  ["2003", ["Mist en el Columbia", "Mist on Columbia"], ["El proyecto Water Mist mide cómo las microgotas de agua frenan la llama.", "The Water Mist project measures how fine water droplets slow a flame."]],
+  ["2015", ["Agua nebulizada en la ISS", "Water mist on the ISS"], ["Los primeros extintores portátiles de agua nebulizada llegan para sustituir las unidades de CO₂.", "The first portable water mist extinguishers arrive to replace the CO₂ units."]],
+  ["2016", ["Saffire I", "Saffire I"], ["Se enciende fuego controlado en una nave de carga para estudiarlo.", "A controlled fire is lit on a cargo spacecraft to study it."]],
+  [["Hoy", "Today"], ["Protocolos actuales", "Current protocols"], ["Detección por capas y simulaciones con datos de los experimentos.", "Layered detection and simulations built on experiment data."]],
 ];
 
 export const VIDEOS_APOLO1 = [
@@ -20,42 +34,42 @@ export const VIDEOS_APOLO13 = [
 ];
 
 export const CANALES = [
-  { n: "NASA", u: "https://www.youtube.com/@NASA", d: "Misiones, documentales y archivo audiovisual oficial." },
-  { n: "NASA Space Technology", u: "https://www.youtube.com/nasaspacetech", d: "Tecnología, experimentos y transferencia a la vida diaria." },
+  { n: "NASA", u: "https://www.youtube.com/@NASA", d: ["Misiones, documentales y archivo audiovisual oficial.", "Missions, documentaries and the official video archive."] },
+  { n: "NASA Space Technology", u: "https://www.youtube.com/nasaspacetech", d: ["Tecnología, experimentos y transferencia a la vida diaria.", "Technology, experiments and their transfer to everyday life."] },
 ];
 
 export const COMPARACION = [
-  ["s", "Qué necesita", "Combustible, oxígeno y calor", "Combustible, oxígeno y calor"],
-  ["d", "Forma de la llama", "Gota alargada hacia arriba", "Esfera pequeña y azulada"],
-  ["d", "Corriente de aire", "Convección natural", "Solo ventilación forzada"],
-  ["d", "Humo", "Sube hacia el techo", "Se acumula cerca de la fuente"],
-  ["s", "Cómo se apaga", "Quitando oxígeno, calor o combustible", "Quitando oxígeno, calor o combustible"],
-  ["d", "Agente extintor", "Agua o espuma", "CO₂ o niebla fina, cuidando los equipos"],
+  ["s", ["Qué necesita", "What it needs"], ["Combustible, oxígeno y calor", "Fuel, oxygen and heat"], ["Combustible, oxígeno y calor", "Fuel, oxygen and heat"]],
+  ["d", ["Forma de la llama", "Flame shape"], ["Gota alargada hacia arriba", "Teardrop stretched upward"], ["Esfera pequeña y azulada", "Small bluish sphere"]],
+  ["d", ["Corriente de aire", "Airflow"], ["Convección natural", "Natural convection"], ["Solo ventilación forzada", "Forced ventilation only"]],
+  ["d", ["Humo", "Smoke"], ["Sube hacia el techo", "Rises to the ceiling"], ["Se acumula cerca de la fuente", "Builds up near the source"]],
+  ["s", ["Cómo se apaga", "How it is put out"], ["Quitando oxígeno, calor o combustible", "Removing oxygen, heat or fuel"], ["Quitando oxígeno, calor o combustible", "Removing oxygen, heat or fuel"]],
+  ["d", ["Agente extintor", "Extinguishing agent"], ["Agua o espuma", "Water or foam"], ["CO₂ o niebla fina, cuidando los equipos", "CO₂ or fine mist, protecting the equipment"]],
 ];
 
 export const AGENTES = {
-  He: { nombre: "Helio", resumen: "Gas inerte ligero, de alta conductividad térmica. Evaluado en FLEX, FLEX-2, CFI y ACME." },
-  CO2: { nombre: "Dióxido de carbono", resumen: "Desplaza el oxígeno. Fue el estándar en la ISS antes del agua nebulizada." },
-  N2: { nombre: "Nitrógeno", resumen: "Diluyente principal del aire. Inyectado sobre sólidos en BASS y BASS-II." },
-  Xe: { nombre: "Xenón", resumen: "Gas inerte pesado, estudiado en simulaciones de gotas en microgravedad." },
-  Ar: { nombre: "Argón", resumen: "Gas inerte comparado con xenón, helio y CO₂ en simulaciones." },
+  He: { nombre: ["Helio", "Helium"], resumen: ["Gas inerte ligero, de alta conductividad térmica. Evaluado en FLEX, FLEX-2, CFI y ACME.", "Light inert gas with high thermal conductivity. Evaluated in FLEX, FLEX-2, CFI and ACME."] },
+  CO2: { nombre: ["Dióxido de carbono", "Carbon dioxide"], resumen: ["Desplaza el oxígeno. Fue el estándar en la ISS antes del agua nebulizada.", "Displaces oxygen. It was the ISS standard before water mist."] },
+  N2: { nombre: ["Nitrógeno", "Nitrogen"], resumen: ["Diluyente principal del aire. Inyectado sobre sólidos en BASS y BASS-II.", "The main diluent in air. Injected over solids in BASS and BASS-II."] },
+  Xe: { nombre: ["Xenón", "Xenon"], resumen: ["Gas inerte pesado, estudiado en simulaciones de gotas en microgravedad.", "Heavy inert gas, studied in simulations of droplets in microgravity."] },
+  Ar: { nombre: ["Argón", "Argon"], resumen: ["Gas inerte comparado con xenón, helio y CO₂ en simulaciones.", "Inert gas compared with xenon, helium and CO₂ in simulations."] },
 };
 
 export const CONTEXTO_EXTINTORES = [
   {
-    n: "Agua nebulizada",
-    r: "Microgotas de agua que enfrían la llama sin ser tóxicas. Sustituyó al CO₂ en los módulos habitados.",
+    n: ["Agua nebulizada", "Water mist"],
+    r: ["Microgotas de agua que enfrían la llama sin ser tóxicas. Sustituyó al CO₂ en los módulos habitados.", "Fine water droplets that cool the flame without being toxic. It replaced CO₂ in the crewed modules."],
   },
   {
-    n: "Dióxido de carbono",
-    r: "Apaga rápido, pero en una cabina cerrada eleva el riesgo de asfixia y sobrecarga el soporte vital.",
+    n: ["Dióxido de carbono", "Carbon dioxide"],
+    r: ["Apaga rápido, pero en una cabina cerrada eleva el riesgo de asfixia y sobrecarga el soporte vital.", "It acts fast, but in a closed cabin it raises the risk of asphyxiation and overloads life support."],
   },
   {
-    n: "Espuma",
-    r: "El agente del programa ruso. Se usó para sofocar el incendio de la Mir en 1997.",
+    n: ["Espuma", "Foam"],
+    r: ["El agente del programa ruso. Se usó para sofocar el incendio de la Mir en 1997.", "The agent of the Russian program. It was used to smother the 1997 Mir fire."],
   },
   {
-    n: "Venteo al vacío",
-    r: "Último recurso: aislar el módulo y despresurizarlo. No usa agentes, pero cuesta aire y suministros.",
+    n: ["Venteo al vacío", "Venting to vacuum"],
+    r: ["Último recurso: aislar el módulo y despresurizarlo. No usa agentes, pero cuesta aire y suministros.", "Last resort: isolate the module and depressurize it. It uses no agent, but it costs air and supplies."],
   },
 ];

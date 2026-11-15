@@ -4,6 +4,7 @@ import { useApi } from "../lib/useApi";
 import { FINDING_TYPE_LABEL, FUEL_CLASS_LABEL, OUTCOME_LABEL, label, num } from "../lib/format";
 import { COMPARACION } from "../content/narrative";
 import { MEDIA } from "../content/media";
+import { pick, tr } from "../lib/i18n";
 import { AskButton, CrossLink, MissionBar, Page } from "../components/Layout";
 import { FindingCard } from "../components/FindingCard";
 import { LegendDot, ScatterMap } from "../components/ScatterMap";
@@ -17,8 +18,8 @@ function Findings({ params, title, sub }) {
       <SectionTitle sub={sub}>{title}</SectionTitle>
       {loading && <Loading />}
       <ErrorBox error={error} />
-      {data && data.findings.length === 0 && <p className="text-gris-oscuro">No hay hallazgos con estos filtros.</p>}
-      <div className="grid gap-4 md:grid-cols-2">
+      {data && data.findings.length === 0 && <p className="text-gris-oscuro">{tr("No hay hallazgos con estos filtros.", "No findings match these filters.")}</p>}
+      <div className="grid gap-4 lg:grid-cols-2">
         {data?.findings.map((f) => (
           <FindingCard key={f.id} finding={f} showScore />
         ))}
@@ -28,7 +29,7 @@ function Findings({ params, title, sub }) {
 }
 
 function testTitle(t) {
-  return `${t.accession} · ${t.test_code || "prueba"} · ${t.fuel}${t.o2_min != null ? ` · ${num(t.o2_min * 100, 1)} % O₂` : ""}${t.pressure_kpa != null ? ` · ${num(t.pressure_kpa, 0)} kPa` : ""}${t.outcome ? ` · ${label(OUTCOME_LABEL, t.outcome)}` : ""}`;
+  return `${t.accession} · ${t.test_code || tr("prueba", "test")} · ${t.fuel}${t.o2_min != null ? ` · ${num(t.o2_min * 100, 1)} % O₂` : ""}${t.pressure_kpa != null ? ` · ${num(t.pressure_kpa, 0)} kPa` : ""}${t.outcome ? ` · ${label(OUTCOME_LABEL, t.outcome)}` : ""}`;
 }
 
 export function Viento() {
@@ -52,8 +53,11 @@ export function Viento() {
   return (
     <Page route="viento" tabs>
       <div className="grid items-start gap-8 md:grid-cols-[1.2fr_1fr]">
-        <p className="text-xl text-gris-oscuro">
-          En microgravedad no hay convección: el único aire que llega a la llama es el de la ventilación. Con poco flujo algunos materiales se apagan solos; con más flujo, la llama crece. Estas son las pruebas reales con flujo medido.
+        <p className="text-lg text-gris-oscuro sm:text-xl">
+          {tr(
+            "En microgravedad no hay convección: el único aire que llega a la llama es el de la ventilación. Con poco flujo algunos materiales se apagan solos; con más flujo, la llama crece. Estas son las pruebas reales con flujo medido.",
+            "In microgravity there is no convection: the only air reaching the flame comes from ventilation. At low flow some materials self-extinguish; with more flow, the flame grows. These are the real tests with measured flow.",
+          )}
         </p>
         <Figure media={MEDIA.propagacion} imgClassName="max-h-80" />
       </div>
@@ -61,32 +65,36 @@ export function Viento() {
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
-        <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-          <Card title="Flujo de aire frente a oxígeno">
+        <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+          <Card title={tr("Flujo de aire frente a oxígeno", "Airflow versus oxygen")}>
             <ScatterMap
               points={points}
               xDomain={[10, 45]}
               yDomain={[0, 40]}
-              xLabel="Oxígeno (%)"
-              yLabel="Velocidad del flujo (cm/s)"
+              xLabel={tr("Oxígeno (%)", "Oxygen (%)")}
+              yLabel={tr("Velocidad del flujo (cm/s)", "Flow velocity (cm/s)")}
               vline={scenario ? scenario.o2_fraction * 100 : null}
               legend={
                 <>
-                  <LegendDot>Prueba</LegendDot>
-                  <LegendDot tone="rojo">Dentro del escenario</LegendDot>
-                  <span>Línea azul: oxígeno del escenario</span>
+                  <LegendDot>{tr("Prueba", "Test")}</LegendDot>
+                  <LegendDot tone="rojo">{tr("Dentro del escenario", "Within the scenario")}</LegendDot>
+                  <span>{tr("Línea azul: oxígeno del escenario", "Blue line: scenario oxygen")}</span>
                 </>
               }
             />
           </Card>
-          <Card title="Pruebas con flujo medido">
+          <Card title={tr("Pruebas con flujo medido", "Tests with measured flow")}>
             <Bars items={Object.entries(byInvestigation).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, label: k, value: v }))} />
-            <Note>{withFlow.length} pruebas tienen a la vez flujo y oxígeno medidos.</Note>
+            <Note>{tr(`${withFlow.length} pruebas tienen a la vez flujo y oxígeno medidos.`, `${withFlow.length} tests have both flow and oxygen measured.`)}</Note>
           </Card>
         </div>
       )}
-      <Findings params={{ q: "flow", limit: 6 }} title="Lo que dicen los experimentos sobre el flujo" sub="Hallazgos verificados que mencionan el flujo de aire, ordenados para el escenario." />
-      <CrossLink text="El flujo trae oxígeno. ¿Qué pasa cuando hay más?" to="oxigeno" button="Concentración de oxígeno" />
+      <Findings
+        params={{ q: "flow", limit: 6 }}
+        title={tr("Lo que dicen los experimentos sobre el flujo", "What the experiments say about flow")}
+        sub={tr("Hallazgos verificados que mencionan el flujo de aire, ordenados para el escenario.", "Verified findings that mention airflow, ranked for the scenario.")}
+      />
+      <CrossLink text={tr("El flujo trae oxígeno. ¿Qué pasa cuando hay más?", "Flow brings oxygen. What happens when there is more?")} to="oxigeno" button={tr("Concentración de oxígeno", "Oxygen concentration")} />
     </Page>
   );
 }
@@ -117,60 +125,68 @@ export function Oxigeno() {
   return (
     <Page route="oxigeno" tabs>
       <div className="grid items-start gap-8 md:grid-cols-[1.2fr_1fr]">
-        <p className="text-xl text-gris-oscuro">
-          Las misiones a la Luna y Marte plantean cabinas con 34 % de oxígeno a baja presión. Mueve el control para ver cuántas pruebas reales existen con esa concentración y qué pasó en ellas.
+        <p className="text-lg text-gris-oscuro sm:text-xl">
+          {tr(
+            "Las misiones a la Luna y Marte plantean cabinas con 34 % de oxígeno a baja presión. Mueve el control para ver cuántas pruebas reales existen con esa concentración y qué pasó en ellas.",
+            "Missions to the Moon and Mars propose cabins with 34 % oxygen at low pressure. Move the slider to see how many real tests exist at that concentration and what happened in them.",
+          )}
         </p>
         <Figure media={MEDIA.oxigeno} />
       </div>
       <MissionBar />
       <Card>
         <label className="block">
-          <span className="flex items-baseline justify-between">
-            <span className="font-serif text-2xl">{o2} % de O₂</span>
+          <span className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <span className="font-serif text-2xl">{o2} % {tr("de O₂", "O₂")}</span>
             {scenario && (
               <button onClick={() => setO2(Math.round(scenario.o2_fraction * 100))} className="text-sm text-azul hover:underline">
-                Usar el del escenario ({Math.round(scenario.o2_fraction * 1000) / 10} %)
+                {tr("Usar el del escenario", "Use the scenario value")} ({num(scenario.o2_fraction * 100, 1)} %)
               </button>
             )}
           </span>
-          <input type="range" min="10" max="45" value={o2} onChange={(e) => setO2(Number(e.target.value))} className="mt-3 w-full accent-rojo" />
+          <input type="range" min="10" max="45" value={o2} onChange={(e) => setO2(Number(e.target.value))} className="mt-3 h-8 w-full accent-rojo" aria-label={tr("Concentración de oxígeno", "Oxygen concentration")} />
         </label>
-        <p className="mt-2 text-sm text-gris-oscuro">El aire normal tiene cerca de 21 %. Se cuentan las pruebas cuyo rango de oxígeno incluye el valor elegido (±1,5 puntos).</p>
+        <p className="mt-2 text-sm text-gris-oscuro">
+          {tr(
+            "El aire normal tiene cerca de 21 %. Se cuentan las pruebas cuyo rango de oxígeno incluye el valor elegido (±1,5 puntos).",
+            "Normal air is about 21 %. Tests are counted when their oxygen range includes the chosen value (±1.5 points).",
+          )}
+        </p>
       </Card>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
         <>
           <KpiRow>
-            <Kpi value={near.length} label={`Pruebas cerca de ${o2} % O₂`} tone={near.length ? "azul" : "rojo"} />
-            <Kpi value={byClass.solid || 0} label="Con materiales sólidos" tone={byClass.solid ? "" : "rojo"} />
-            <Kpi value={byClass.droplet || 0} label="Con gotas de combustible" />
-            <Kpi value={byClass.gas || 0} label="Con llamas de gas" />
+            <Kpi value={near.length} label={tr(`Pruebas cerca de ${o2} % O₂`, `Tests near ${o2} % O₂`)} tone={near.length ? "azul" : "rojo"} />
+            <Kpi value={byClass.solid || 0} label={tr("Con materiales sólidos", "With solid materials")} tone={byClass.solid ? "" : "rojo"} />
+            <Kpi value={byClass.droplet || 0} label={tr("Con gotas de combustible", "With fuel droplets")} />
+            <Kpi value={byClass.gas || 0} label={tr("Con llamas de gas", "With gas flames")} />
           </KpiRow>
-          <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-            <Card title="Pruebas por oxígeno y presión">
+          <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
+            <Card title={tr("Pruebas por oxígeno y presión", "Tests by oxygen and pressure")}>
               <ScatterMap
                 points={points}
                 xDomain={[10, 90]}
                 yDomain={[0, 320]}
-                xLabel="Oxígeno (%)"
-                yLabel="Presión (kPa)"
+                xLabel={tr("Oxígeno (%)", "Oxygen (%)")}
+                yLabel={tr("Presión (kPa)", "Pressure (kPa)")}
                 vline={o2}
                 marker={scenario ? { x: scenario.o2_fraction * 100, y: scenario.pressure_kpa, label: scenario.name } : null}
                 legend={
                   <>
-                    <LegendDot>Prueba</LegendDot>
-                    <LegendDot tone="rojo">Cerca del O₂ elegido</LegendDot>
-                    <LegendDot tone="noche">Escenario de misión</LegendDot>
+                    <LegendDot>{tr("Prueba", "Test")}</LegendDot>
+                    <LegendDot tone="rojo">{tr("Cerca del O₂ elegido", "Near the chosen O₂")}</LegendDot>
+                    <LegendDot tone="noche">{tr("Escenario de misión", "Mission scenario")}</LegendDot>
                   </>
                 }
               />
             </Card>
-            <Card title="Resultado de esas pruebas">
+            <Card title={tr("Resultado de esas pruebas", "Outcome of those tests")}>
               {Object.keys(outcomes).length ? (
                 <Bars items={Object.entries(outcomes).map(([k, v]) => ({ key: k, label: label(OUTCOME_LABEL, k), value: v }))} />
               ) : (
-                <p className="text-sm text-gris-oscuro">Las pruebas con este nivel de oxígeno no registran el resultado.</p>
+                <p className="text-sm text-gris-oscuro">{tr("Las pruebas con este nivel de oxígeno no registran el resultado.", "Tests at this oxygen level do not record the outcome.")}</p>
               )}
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {Object.entries(byClass).map(([k, v]) => (
@@ -183,7 +199,11 @@ export function Oxigeno() {
           </div>
         </>
       )}
-      <Findings params={{ q: "oxygen", limit: 6 }} title="Lo que dicen los experimentos sobre el oxígeno" sub="Hallazgos verificados que mencionan el oxígeno, ordenados por cercanía al escenario." />
+      <Findings
+        params={{ q: "oxygen", limit: 6 }}
+        title={tr("Lo que dicen los experimentos sobre el oxígeno", "What the experiments say about oxygen")}
+        sub={tr("Hallazgos verificados que mencionan el oxígeno, ordenados por cercanía al escenario.", "Verified findings that mention oxygen, ranked by closeness to the scenario.")}
+      />
     </Page>
   );
 }
@@ -195,15 +215,18 @@ export function Sensores() {
   return (
     <Page route="sensores" tabs>
       <div className="grid items-start gap-8 md:grid-cols-[1.2fr_1fr]">
-        <p className="text-xl text-gris-oscuro">
-          Sin convección, el humo no sube al techo: se queda cerca del fuego y sus partículas son distintas. Los experimentos SAME, SAME-R y DAFT midieron cómo detectarlo a bordo.
+        <p className="text-lg text-gris-oscuro sm:text-xl">
+          {tr(
+            "Sin convección, el humo no sube al techo: se queda cerca del fuego y sus partículas son distintas. Los experimentos SAME, SAME-R y DAFT midieron cómo detectarlo a bordo.",
+            "Without convection, smoke does not rise to the ceiling: it stays near the fire and its particles are different. The SAME, SAME-R and DAFT experiments measured how to detect it on board.",
+          )}
         </p>
         <Figure media={MEDIA.hollin} />
       </div>
       <MissionBar showArea={false} />
-      <ChipRow label="Tipo de hallazgo">
+      <ChipRow label={tr("Tipo de hallazgo", "Finding type")}>
         <Chip active={!type} onClick={() => setType("")} tone="azul">
-          Todos
+          {tr("Todos", "All")}
         </Chip>
         {["quantitative", "qualitative", "gap"].map((t) => (
           <Chip key={t} active={type === t} onClick={() => setType(t)} tone="azul">
@@ -213,14 +236,18 @@ export function Sensores() {
       </ChipRow>
       {loading && <Loading />}
       <ErrorBox error={error} />
-      {data && <p className="mb-4 text-sm text-gris-oscuro">{data.total} hallazgos verificados de detección. Los más relevantes para el escenario:</p>}
-      <div className="grid gap-4 md:grid-cols-2">
+      {data && (
+        <p className="mb-4 text-sm text-gris-oscuro">
+          {tr(`${data.total} hallazgos verificados de detección. Los más relevantes para el escenario:`, `${data.total} verified detection findings. The most relevant for the scenario:`)}
+        </p>
+      )}
+      <div className="grid gap-4 lg:grid-cols-2">
         {data?.findings.map((f) => (
           <FindingCard key={f.id} finding={f} showScore />
         ))}
       </div>
       <div className="mt-8">
-        <AskButton question="¿Cómo se detecta un incendio en una nave espacial y qué limitaciones tienen los detectores?" />
+        <AskButton question={tr("¿Cómo se detecta un incendio en una nave espacial y qué limitaciones tienen los detectores?", "How is a fire detected on a spacecraft and what are the limits of the detectors?")} />
       </div>
     </Page>
   );
@@ -231,18 +258,18 @@ export function Comparacion() {
   const rows = COMPARACION.filter((r) => filter === "t" || r[0] === filter);
   return (
     <Page route="comparacion" tabs>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6">
         <Figure media={MEDIA.velaTierra} imgClassName="aspect-[3/4] object-contain" />
         <Figure media={MEDIA.velaMicro} imgClassName="aspect-[3/4] object-contain" />
       </div>
-      <ChipRow label="Filtrar comparación">
+      <ChipRow label={tr("Filtrar comparación", "Filter comparison")}>
         {[
-          ["t", "Todo"],
-          ["s", "Similitudes"],
-          ["d", "Diferencias"],
+          ["t", ["Todo", "All"]],
+          ["s", ["Similitudes", "Similarities"]],
+          ["d", ["Diferencias", "Differences"]],
         ].map(([k, t]) => (
           <Chip key={k} active={filter === k} onClick={() => setFilter(k)}>
-            {t}
+            {pick(t)}
           </Chip>
         ))}
       </ChipRow>
@@ -251,19 +278,19 @@ export function Comparacion() {
           <thead className="bg-claro">
             <tr>
               <th className="p-3" />
-              <th className="p-3 font-medium">Tierra</th>
-              <th className="p-3 font-medium">Espacio</th>
+              <th className="p-3 font-medium">{tr("Tierra", "Earth")}</th>
+              <th className="p-3 font-medium">{tr("Espacio", "Space")}</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r[1]} className="border-t border-linea">
+              <tr key={r[1][0]} className="border-t border-linea">
                 <td className="p-3">
-                  <Tag tone={r[0] === "s" ? "azul" : "rojo"}>{r[0] === "s" ? "Igual" : "Distinto"}</Tag>
-                  <b className="mt-1 block">{r[1]}</b>
+                  <Tag tone={r[0] === "s" ? "azul" : "rojo"}>{r[0] === "s" ? tr("Igual", "Same") : tr("Distinto", "Different")}</Tag>
+                  <b className="mt-1 block">{pick(r[1])}</b>
                 </td>
-                <td className="p-3">{r[2]}</td>
-                <td className="p-3">{r[3]}</td>
+                <td className="p-3">{pick(r[2])}</td>
+                <td className="p-3">{pick(r[3])}</td>
               </tr>
             ))}
           </tbody>
@@ -271,7 +298,7 @@ export function Comparacion() {
       </div>
       <Figure media={MEDIA.comparacion} className="mt-10" imgClassName="max-h-[480px] object-contain" />
       <div className="mt-8">
-        <AskButton question="¿En qué se diferencia una llama en microgravedad de una llama en la Tierra?" />
+        <AskButton question={tr("¿En qué se diferencia una llama en microgravedad de una llama en la Tierra?", "How does a flame in microgravity differ from a flame on Earth?")} />
       </div>
     </Page>
   );

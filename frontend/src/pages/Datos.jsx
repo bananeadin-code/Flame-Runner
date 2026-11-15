@@ -4,47 +4,48 @@ import { useApi } from "../lib/useApi";
 import { href } from "../lib/route";
 import { AREA_LABEL, DOC_TYPE_LABEL, FUEL_CLASS_LABEL, OUTCOME_LABEL, QUANTITY_LABEL, label, num, year } from "../lib/format";
 import { MEDIA } from "../content/media";
+import { pick, tr } from "../lib/i18n";
 import { AskButton, MissionBar, Page } from "../components/Layout";
 import { Bars, Card, Chip, ChipRow, ErrorBox, Figure, Kpi, KpiRow, Loading, Note, SectionTitle, Tag } from "../components/ui";
 
 function InvestigationDetail({ accession, onClose }) {
   const { data, error, loading } = useApi(`/api/investigations/${accession}`);
   return (
-    <div className="rounded-xl border-2 border-azul bg-white p-6 animate-aparecer">
+    <div className="rounded-xl border-2 border-azul bg-white p-4 animate-aparecer sm:p-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <small className="text-xs uppercase tracking-wide text-gris-oscuro">{accession}</small>
-          <h3 className="text-2xl">{data ? `${data.acronym ? `${data.acronym} · ` : ""}${data.title}` : "Cargando…"}</h3>
+          <h3 className="text-xl break-words sm:text-2xl">{data ? `${data.acronym ? `${data.acronym} · ` : ""}${data.title}` : tr("Cargando…", "Loading…")}</h3>
         </div>
-        <button onClick={onClose} className="text-3xl leading-none text-gris-oscuro" aria-label="Cerrar detalle">
+        <button onClick={onClose} className="text-3xl leading-none text-gris-oscuro" aria-label={tr("Cerrar detalle", "Close details")}>
           ×
         </button>
       </div>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
-        <div className="mt-4 grid gap-6 md:grid-cols-[2fr_1fr]">
+        <div className="mt-4 grid gap-6 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-4 text-sm leading-relaxed">
             {data.objective && (
               <p>
-                <b>Objetivo. </b>
+                <b>{tr("Objetivo. ", "Objective. ")}</b>
                 {data.objective}
               </p>
             )}
             {data.hypothesis && (
               <p>
-                <b>Hipótesis. </b>
+                <b>{tr("Hipótesis. ", "Hypothesis. ")}</b>
                 {data.hypothesis}
               </p>
             )}
             <a href={data.psi_url} target="_blank" rel="noreferrer" className="inline-block rounded-full bg-azul px-4 py-1.5 text-white hover:bg-azul-claro">
-              Ver en NASA PSI ↗
+              {tr("Ver en NASA PSI", "View on NASA PSI")} ↗
             </a>
           </div>
           <div>
             <KpiRow>
-              <Kpi value={data.tests} label="Pruebas" />
-              <Kpi value={Object.values(data.findings_by_area).reduce((a, b) => a + b, 0)} label="Hallazgos" tone="rojo" />
+              <Kpi value={data.tests} label={tr("Pruebas", "Tests")} />
+              <Kpi value={Object.values(data.findings_by_area).reduce((a, b) => a + b, 0)} label={tr("Hallazgos", "Findings")} tone="rojo" />
             </KpiRow>
             <Bars items={Object.entries(data.findings_by_area).map(([k, v]) => ({ key: k, label: label(AREA_LABEL, k), value: v }))} />
           </div>
@@ -61,7 +62,7 @@ export function Investigaciones({ query }) {
   const list = (data || []).filter((i) => !area || i.primary_area === area);
   const platforms = {};
   (data || []).forEach((i) => {
-    const p = (i.platform || "Tierra").replace("International Space Station (ISS)", "ISS").replace("Not Applicable", "Tierra");
+    const p = (i.platform || tr("Tierra", "Ground")).replace("International Space Station (ISS)", "ISS").replace("Not Applicable", tr("Tierra", "Ground"));
     platforms[p] = (platforms[p] || 0) + 1;
   });
   const years = list.flatMap((i) => [year(i.start_date), year(i.end_date)]).filter(Boolean);
@@ -71,8 +72,11 @@ export function Investigaciones({ query }) {
   return (
     <Page route="investigaciones" tabs>
       <div className="grid items-start gap-8 md:grid-cols-[1.2fr_1fr]">
-        <p className="text-xl text-gris-oscuro">
-          Las 24 investigaciones de Combustion Science del repositorio Physical Sciences Informatics de la NASA: qué estudiaron, cuándo y cuánta evidencia aportan.
+        <p className="text-lg text-gris-oscuro sm:text-xl">
+          {tr(
+            "Las 24 investigaciones de Combustion Science del repositorio Physical Sciences Informatics de la NASA: qué estudiaron, cuándo y cuánta evidencia aportan.",
+            "The 24 Combustion Science investigations in NASA’s Physical Sciences Informatics repository: what they studied, when, and how much evidence they provide.",
+          )}
         </p>
         <Figure media={MEDIA.astronauta} />
       </div>
@@ -82,13 +86,13 @@ export function Investigaciones({ query }) {
       {data && (
         <>
           <KpiRow>
-            <Kpi value={data.length} label="Investigaciones" note="NASA PSI · Combustion Science" />
-            <Kpi value={data.filter((i) => i.project_type?.includes("Microgravity")).length} label="En vuelo" note="ISS y naves Cygnus" />
-            <Kpi value={data.reduce((s, i) => s + i.tests, 0)} label="Pruebas registradas" />
-            <Kpi value={data.reduce((s, i) => s + i.findings, 0)} label="Hallazgos verificados" tone="rojo" />
+            <Kpi value={data.length} label={tr("Investigaciones", "Investigations")} note="NASA PSI · Combustion Science" />
+            <Kpi value={data.filter((i) => i.project_type?.includes("Microgravity")).length} label={tr("En vuelo", "In flight")} note={tr("ISS y naves Cygnus", "ISS and Cygnus spacecraft")} />
+            <Kpi value={data.reduce((s, i) => s + i.tests, 0)} label={tr("Pruebas registradas", "Recorded tests")} />
+            <Kpi value={data.reduce((s, i) => s + i.findings, 0)} label={tr("Hallazgos verificados", "Verified findings")} tone="rojo" />
           </KpiRow>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card title="Por área principal">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card title={tr("Por área principal", "By main area")}>
               <Bars
                 items={["prevention", "detection", "suppression", "fundamental"].map((a) => ({
                   key: a,
@@ -98,7 +102,7 @@ export function Investigaciones({ query }) {
                 }))}
               />
             </Card>
-            <Card title="Por plataforma">
+            <Card title={tr("Por plataforma", "By platform")}>
               <Bars items={Object.entries(platforms).map(([k, v]) => ({ key: k, label: k, value: v }))} />
             </Card>
           </div>
@@ -107,8 +111,8 @@ export function Investigaciones({ query }) {
               <InvestigationDetail key={selected} accession={selected} onClose={() => setSelected(null)} />
             </div>
           )}
-          <Card title={`Cronograma (${list.length})`} className="mt-8">
-            <div className="mb-2 ml-[11rem] flex justify-between text-xs text-gris-oscuro">
+          <Card title={`${tr("Cronograma", "Timeline")} (${list.length})`} className="mt-8">
+            <div className="mb-2 ml-[6.5rem] mr-0 flex justify-between text-xs text-gris-oscuro sm:ml-[11rem] sm:mr-[5.5rem]">
               <span>{y0}</span>
               <span>{Math.round((y0 + y1) / 2)}</span>
               <span>{y1}</span>
@@ -124,7 +128,7 @@ export function Investigaciones({ query }) {
                       setSelected(i.accession);
                       window.history.replaceState(null, "", href("investigaciones", { acc: i.accession }));
                     }}
-                    className={`grid w-full grid-cols-[10.5rem_1fr_5rem] items-center gap-2 rounded px-1 py-1 text-left text-sm transition hover:bg-claro ${selected === i.accession ? "bg-claro" : ""}`}
+                    className={`grid w-full grid-cols-[6rem_1fr] items-center gap-2 sm:grid-cols-[10.5rem_1fr_5rem] rounded px-1 py-1 text-left text-sm transition hover:bg-claro ${selected === i.accession ? "bg-claro" : ""}`}
                   >
                     <span className="truncate">
                       <b>{i.acronym || i.accession}</b>
@@ -132,17 +136,19 @@ export function Investigaciones({ query }) {
                     <span className="relative h-3 rounded-full bg-claro">
                       <i className={`absolute inset-y-0 rounded-full ${i.project_type?.includes("Ground") ? "bg-gris" : "bg-azul"}`} style={{ left: `${pos(start)}%`, width: `${Math.max(1.5, pos(end) - pos(start))}%` }} />
                     </span>
-                    <span className="text-right text-xs text-gris-oscuro">{i.findings} hallazgos</span>
+                    <span className="hidden text-right text-xs text-gris-oscuro sm:block">
+                      {i.findings} {tr("hallazgos", "findings")}
+                    </span>
                   </button>
                 );
               })}
             </div>
-            <div className="mt-4 flex gap-4 text-xs text-gris-oscuro">
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-gris-oscuro">
               <span className="inline-flex items-center gap-1.5">
-                <i className="inline-block h-2 w-4 rounded bg-azul" /> Vuelo
+                <i className="inline-block h-2 w-4 rounded bg-azul" /> {tr("Vuelo", "Flight")}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <i className="inline-block h-2 w-4 rounded bg-gris" /> Investigación en tierra
+                <i className="inline-block h-2 w-4 rounded bg-gris" /> {tr("Investigación en tierra", "Ground research")}
               </span>
             </div>
           </Card>
@@ -168,13 +174,16 @@ export function Pruebas() {
   const burn = tests.filter((t) => t.burn_time_s > 0);
   return (
     <Page route="pruebas" tabs>
-      <p className="max-w-3xl text-xl text-gris-oscuro">
-        Cada prueba experimental de las tablas de PSI, con sus condiciones normalizadas: oxígeno, presión, flujo, diluyente y resultado.
+      <p className="max-w-3xl text-lg text-gris-oscuro sm:text-xl">
+        {tr(
+          "Cada prueba experimental de las tablas de PSI, con sus condiciones normalizadas: oxígeno, presión, flujo, diluyente y resultado.",
+          "Every experimental test in the PSI tables, with its normalized conditions: oxygen, pressure, flow, diluent and outcome.",
+        )}
       </p>
       <MissionBar showArea={false} />
-      <ChipRow label="Filtrar por tipo de combustible">
+      <ChipRow label={tr("Filtrar por tipo de combustible", "Filter by fuel type")}>
         <Chip active={!fuelClass} onClick={() => setFuelClass("")}>
-          Todos
+          {tr("Todos", "All")}
         </Chip>
         {Object.keys(FUEL_CLASS_LABEL).map((fc) => (
           <Chip key={fc} active={fuelClass === fc} onClick={() => setFuelClass(fc)}>
@@ -182,7 +191,7 @@ export function Pruebas() {
           </Chip>
         ))}
         <Chip active={onlyScenario} onClick={() => setOnlyScenario(!onlyScenario)} tone="azul">
-          Solo dentro de {scenario?.name || "el escenario"}
+          {tr("Solo dentro de", "Only within")} {scenario?.name || tr("el escenario", "the scenario")}
         </Chip>
       </ChipRow>
       {loading && <Loading />}
@@ -190,31 +199,47 @@ export function Pruebas() {
       {data && (
         <>
           <KpiRow>
-            <Kpi value={tests.length} label="Pruebas" />
-            <Kpi value={tests.filter((t) => t.in_scenario).length} label="Dentro del escenario" tone="azul" />
-            <Kpi value={Object.values(outcomes).reduce((a, b) => a + b, 0)} label="Con resultado registrado" />
-            <Kpi value={burn.length ? burn.reduce((s, t) => s + t.burn_time_s, 0) / burn.length : null} digits={1} suffix=" s" label="Combustión media" note={`${burn.length} pruebas con tiempo`} />
+            <Kpi value={tests.length} label={tr("Pruebas", "Tests")} />
+            <Kpi value={tests.filter((t) => t.in_scenario).length} label={tr("Dentro del escenario", "Within the scenario")} tone="azul" />
+            <Kpi value={Object.values(outcomes).reduce((a, b) => a + b, 0)} label={tr("Con resultado registrado", "With a recorded outcome")} />
+            <Kpi
+              value={burn.length ? burn.reduce((s, t) => s + t.burn_time_s, 0) / burn.length : null}
+              digits={1}
+              suffix=" s"
+              label={tr("Combustión media", "Mean burn time")}
+              note={tr(`${burn.length} pruebas con tiempo`, `${burn.length} tests with a time`)}
+            />
           </KpiRow>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card title="Resultado">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card title={tr("Resultado", "Outcome")}>
               {Object.keys(outcomes).length ? (
                 <Bars items={Object.entries(outcomes).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ key: k, label: label(OUTCOME_LABEL, k), value: v, tone: k === "disrupted" ? "rojo" : "" }))} />
               ) : (
-                <p className="text-sm text-gris-oscuro">Estas pruebas no registran el resultado.</p>
+                <p className="text-sm text-gris-oscuro">{tr("Estas pruebas no registran el resultado.", "These tests do not record the outcome.")}</p>
               )}
             </Card>
-            <Card title="Por investigación">
+            <Card title={tr("Por investigación", "By investigation")}>
               <Bars items={Object.entries(byInvestigation).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([k, v]) => ({ key: k, label: k, value: v }))} />
             </Card>
           </div>
-          <Card title="Detalle de pruebas" className="mt-8">
-            <div className="overflow-x-auto">
+          <Card title={tr("Detalle de pruebas", "Test details")} className="mt-8">
+            <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="text-xs text-gris-oscuro uppercase">
                   <tr>
-                    {["Prueba", "Investigación", "Combustible", "O₂", "Presión", "Flujo", "Diluyente", "Resultado", "Tiempo"].map((h) => (
-                      <th key={h} className="p-2 font-medium">
-                        {h}
+                    {[
+                      ["Prueba", "Test"],
+                      ["Investigación", "Investigation"],
+                      ["Combustible", "Fuel"],
+                      ["O₂", "O₂"],
+                      ["Presión", "Pressure"],
+                      ["Flujo", "Flow"],
+                      ["Diluyente", "Diluent"],
+                      ["Resultado", "Outcome"],
+                      ["Tiempo", "Time"],
+                    ].map((h) => (
+                      <th key={h[0]} className="p-2 font-medium">
+                        {pick(h)}
                       </th>
                     ))}
                   </tr>
@@ -240,11 +265,11 @@ export function Pruebas() {
             </div>
             {shown < tests.length && (
               <button onClick={() => setShown(shown + 80)} className="mt-4 rounded-full border border-linea px-5 py-2 text-sm hover:border-noche">
-                Mostrar más ({tests.length - shown} restantes)
+                {tr("Mostrar más", "Show more")} ({tests.length - shown} {tr("restantes", "left")})
               </button>
             )}
           </Card>
-          <Note>Filas resaltadas: pruebas cuyas condiciones de oxígeno y presión coinciden con el escenario elegido.</Note>
+          <Note>{tr("Filas resaltadas: pruebas cuyas condiciones de oxígeno y presión coinciden con el escenario elegido.", "Highlighted rows: tests whose oxygen and pressure conditions match the chosen scenario.")}</Note>
         </>
       )}
     </Page>
@@ -252,9 +277,9 @@ export function Pruebas() {
 }
 
 const METRICS = {
-  o2: { title: "Concentración de O₂", unit: "%", min: "o2_min", max: "o2_max", scale: 100, domain: 90, scenario: (s) => s.o2_fraction * 100 },
-  pressure: { title: "Presión", unit: "kPa", min: "pressure_min", max: "pressure_max", scale: 1, domain: 320, scenario: (s) => s.pressure_kpa },
-  flow: { title: "Velocidad de flujo", unit: "cm/s", min: "flow_min", max: "flow_max", scale: 1, domain: 40, scenario: () => null },
+  o2: { title: ["Concentración de O₂", "O₂ concentration"], unit: "%", min: "o2_min", max: "o2_max", scale: 100, domain: 90, scenario: (s) => s.o2_fraction * 100 },
+  pressure: { title: ["Presión", "Pressure"], unit: "kPa", min: "pressure_min", max: "pressure_max", scale: 1, domain: 320, scenario: (s) => s.pressure_kpa },
+  flow: { title: ["Velocidad de flujo", "Flow velocity"], unit: "cm/s", min: "flow_min", max: "flow_max", scale: 1, domain: 40, scenario: () => null },
 };
 
 export function Ambiente() {
@@ -266,28 +291,31 @@ export function Ambiente() {
   const line = scenario ? m.scenario(scenario) : null;
   return (
     <Page route="ambiente" tabs>
-      <p className="max-w-3xl text-xl text-gris-oscuro">
-        Rango de condiciones en el que se probó cada investigación. La línea azul marca el escenario elegido: si no la cruza ninguna barra, esas condiciones no se han probado.
+      <p className="max-w-3xl text-lg text-gris-oscuro sm:text-xl">
+        {tr(
+          "Rango de condiciones en el que se probó cada investigación. La línea negra marca el escenario elegido: si no la cruza ninguna barra, esas condiciones no se han probado.",
+          "Range of conditions each investigation was tested in. The black line marks the chosen scenario: if no bar crosses it, those conditions have not been tested.",
+        )}
       </p>
       <MissionBar showArea={false} />
-      <ChipRow label="Métrica ambiental">
+      <ChipRow label={tr("Métrica ambiental", "Environmental metric")}>
         {Object.entries(METRICS).map(([k, v]) => (
           <Chip key={k} active={metric === k} onClick={() => setMetric(k)}>
-            {v.title}
+            {pick(v.title)}
           </Chip>
         ))}
       </ChipRow>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
-        <Card title={`${m.title} (${m.unit})`}>
+        <Card title={`${pick(m.title)} (${m.unit})`}>
           <div className="relative space-y-2">
             {rows.map((i) => {
               const lo = i[m.min] * m.scale;
               const hi = i[m.max] * m.scale;
               const covers = line != null && lo <= line && line <= hi;
               return (
-                <div key={i.accession} className="grid grid-cols-[9rem_1fr_7rem] items-center gap-3 text-sm">
+                <div key={i.accession} className="grid grid-cols-[5.5rem_1fr_4.5rem] items-center gap-2 text-sm sm:grid-cols-[9rem_1fr_7rem] sm:gap-3">
                   <span className="truncate">
                     <b>{i.acronym || i.accession}</b>
                   </span>
@@ -295,14 +323,14 @@ export function Ambiente() {
                     <i className={`absolute inset-y-0 rounded-full ${covers ? "bg-rojo" : "bg-azul"}`} style={{ left: `${(lo / m.domain) * 100}%`, width: `${Math.max(1, ((hi - lo) / m.domain) * 100)}%` }} />
                     {line != null && <i className="absolute -inset-y-1 w-0.5 bg-noche" style={{ left: `${(line / m.domain) * 100}%` }} />}
                   </span>
-                  <span className="text-right tabular-nums text-gris-oscuro">
+                  <span className="text-right text-xs tabular-nums text-gris-oscuro sm:text-sm">
                     {num(lo, 1)}–{num(hi, 1)}
                   </span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-3 ml-[9.75rem] mr-[7.75rem] flex justify-between text-xs text-gris-oscuro">
+          <div className="mt-3 ml-[6rem] mr-[5rem] flex justify-between text-xs text-gris-oscuro sm:ml-[9.75rem] sm:mr-[7.75rem]">
             <span>0</span>
             <span>{m.domain / 2}</span>
             <span>
@@ -311,9 +339,12 @@ export function Ambiente() {
           </div>
           <Note>
             {line != null
-              ? `Línea negra: ${scenario.name} (${num(line, 1)} ${m.unit}). En rojo, las investigaciones cuyo rango la incluye.`
-              : "Los escenarios de misión no fijan un flujo de aire."}{" "}
-            Se muestran solo las investigaciones con este dato en sus tablas.
+              ? tr(
+                  `Línea negra: ${scenario.name} (${num(line, 1)} ${m.unit}). En rojo, las investigaciones cuyo rango la incluye.`,
+                  `Black line: ${scenario.name} (${num(line, 1)} ${m.unit}). In red, the investigations whose range includes it.`,
+                )
+              : tr("Los escenarios de misión no fijan un flujo de aire.", "Mission scenarios do not set an airflow.")}{" "}
+            {tr("Se muestran solo las investigaciones con este dato en sus tablas.", "Only investigations with this value in their tables are shown.")}
           </Note>
         </Card>
       )}
@@ -328,8 +359,10 @@ export function Mediciones() {
   const top = data?.values.slice(0, 25) || [];
   return (
     <Page route="mediciones" tabs>
-      <p className="max-w-3xl text-xl text-gris-oscuro">Valores medidos en cada prueba, agrupados por magnitud. Datos de las tablas experimentales de PSI.</p>
-      <ChipRow label="Magnitud">
+      <p className="max-w-3xl text-lg text-gris-oscuro sm:text-xl">
+        {tr("Valores medidos en cada prueba, agrupados por magnitud. Datos de las tablas experimentales de PSI.", "Values measured in each test, grouped by quantity. Data from the PSI experiment tables.")}
+      </p>
+      <ChipRow label={tr("Magnitud", "Quantity")}>
         {(list?.quantities || []).slice(0, 14).map((q) => (
           <Chip key={q.quantity} active={quantity === q.quantity} onClick={() => setQuantity(q.quantity)}>
             {label(QUANTITY_LABEL, q.quantity)} <span className="opacity-70">({q.count})</span>
@@ -341,12 +374,12 @@ export function Mediciones() {
       {data && (
         <>
           <KpiRow>
-            <Kpi value={data.stats.min} digits={2} suffix={` ${data.stats.unit || ""}`} label="Mínimo" />
-            <Kpi value={data.stats.mean} digits={2} suffix={` ${data.stats.unit || ""}`} label="Media" tone="azul" />
-            <Kpi value={data.stats.max} digits={2} suffix={` ${data.stats.unit || ""}`} label="Máximo" />
-            <Kpi value={data.stats.count} label="Mediciones" />
+            <Kpi value={data.stats.min} digits={2} suffix={` ${data.stats.unit || ""}`} label={tr("Mínimo", "Minimum")} />
+            <Kpi value={data.stats.mean} digits={2} suffix={` ${data.stats.unit || ""}`} label={tr("Media", "Mean")} tone="azul" />
+            <Kpi value={data.stats.max} digits={2} suffix={` ${data.stats.unit || ""}`} label={tr("Máximo", "Maximum")} />
+            <Kpi value={data.stats.count} label={tr("Mediciones", "Measurements")} />
           </KpiRow>
-          <Card title={`${label(QUANTITY_LABEL, quantity)} · 25 valores más altos`}>
+          <Card title={`${label(QUANTITY_LABEL, quantity)} · ${tr("25 valores más altos", "25 highest values")}`}>
             <Bars items={top.map((v) => ({ key: v.test_id, label: `${v.accession} · ${v.test_code || v.fuel}`, value: v.value, text: `${num(v.value)} ${v.unit || ""}` }))} />
           </Card>
         </>
@@ -362,40 +395,42 @@ export function Publicaciones() {
   const pubs = useMemo(() => (detail.data?.publications || []).slice().sort((a, b) => (b.doi_url ? 1 : 0) - (a.doi_url ? 1 : 0)), [detail.data]);
   return (
     <Page route="publicaciones" tabs>
-      <p className="max-w-3xl text-xl text-gris-oscuro">El respaldo documental de la base: artículos publicados con su DOI y los documentos procesados página por página.</p>
+      <p className="max-w-3xl text-lg text-gris-oscuro sm:text-xl">
+        {tr("El respaldo documental de la base: artículos publicados con su DOI y los documentos procesados página por página.", "The documentary backing of the database: published papers with their DOI and the documents processed page by page.")}
+      </p>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
         <>
           <KpiRow>
-            <Kpi value={data.totals.publications} label="Publicaciones" />
-            <Kpi value={data.totals.with_doi} label="Con DOI" tone="azul" />
-            <Kpi value={data.totals.documents} label="Documentos procesados" />
-            <Kpi value={data.totals.pages} label="Páginas indexadas" />
+            <Kpi value={data.totals.publications} label={tr("Publicaciones", "Publications")} />
+            <Kpi value={data.totals.with_doi} label={tr("Con DOI", "With DOI")} tone="azul" />
+            <Kpi value={data.totals.documents} label={tr("Documentos procesados", "Processed documents")} />
+            <Kpi value={data.totals.pages} label={tr("Páginas indexadas", "Indexed pages")} />
           </KpiRow>
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card title="Publicaciones por investigación">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card title={tr("Publicaciones por investigación", "Publications by investigation")}>
               <Bars
                 items={data.publications_by_investigation.filter((p) => p.publications).map((p) => ({ key: p.accession, label: p.acronym || p.accession, value: p.publications }))}
                 onSelect={setSelected}
                 selected={selected}
               />
-              <Note>Pulsa una investigación para ver sus artículos.</Note>
+              <Note>{tr("Pulsa una investigación para ver sus artículos.", "Tap an investigation to see its papers.")}</Note>
             </Card>
-            <Card title="Documentos por tipo">
+            <Card title={tr("Documentos por tipo", "Documents by type")}>
               <Bars items={data.documents_by_type.map((d) => ({ key: d.doc_type, label: label(DOC_TYPE_LABEL, d.doc_type), value: d.documents, text: `${num(d.documents)} · ${num(d.pages)} p.` }))} />
             </Card>
           </div>
           {selected && (
-            <Card title={`Publicaciones · ${detail.data?.acronym || selected}`} className="mt-8">
+            <Card title={`${tr("Publicaciones", "Publications")} · ${detail.data?.acronym || selected}`} className="mt-8">
               {detail.loading && <Loading />}
               <ul className="divide-y divide-linea">
                 {pubs.map((p) => (
                   <li key={p.title} className="py-3 text-sm">
-                    <p className="font-medium">{p.title}</p>
+                    <p className="font-medium break-words">{p.title}</p>
                     <p className="text-xs text-gris-oscuro">{p.authors}</p>
                     {p.doi_url && (
-                      <a href={p.doi_url} target="_blank" rel="noreferrer" className="text-xs font-medium text-azul hover:underline">
+                      <a href={p.doi_url} target="_blank" rel="noreferrer" className="text-xs font-medium break-all text-azul hover:underline">
                         {p.doi} ↗
                       </a>
                     )}
@@ -404,8 +439,8 @@ export function Publicaciones() {
               </ul>
             </Card>
           )}
-          <SectionTitle>Busca dentro de los documentos</SectionTitle>
-          <AskButton question="">Buscar en las 10 829 páginas</AskButton>
+          <SectionTitle>{tr("Busca dentro de los documentos", "Search inside the documents")}</SectionTitle>
+          <AskButton question="">{tr(`Buscar en las ${num(data.totals.pages)} páginas`, `Search the ${num(data.totals.pages)} pages`)}</AskButton>
         </>
       )}
     </Page>

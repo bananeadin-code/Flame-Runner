@@ -1,4 +1,4 @@
-# Frontend · Fuego en el espacio
+# Frontend · Flame Runner
 
 Dashboard en React + Vite + Tailwind CSS 4 que consume la API de FastAPI del directorio `backend/`.
 
@@ -23,8 +23,8 @@ VITE_API_URL=https://tu-backend.onrender.com npm run build
 
 | Carpeta | Contenido |
 |---|---|
-| `src/lib` | Cliente de la API (`api.js`, `useApi.js`), rutas con `#/`, páginas y formatos |
-| `src/state` | Estado global: escenario de misión, filtro de área, buscador y visor de fuentes |
+| `src/lib` | Cliente de la API (`api.js`, `useApi.js`), rutas con `#/`, páginas, formatos e idioma (`i18n.js`) |
+| `src/state` | Estado global: idioma, escenario de misión, filtro de área, buscador y visor de fuentes |
 | `src/components` | Cabecera, buscador con asistente, visor de página, tarjeta de hallazgo, gráfico de dispersión |
 | `src/pages` | Inicio, Misión, Fuego en microgravedad, Datos de la investigación e Historia |
 | `src/content` | Textos narrativos e imágenes reales de la NASA con su crédito |
@@ -45,5 +45,13 @@ VITE_API_URL=https://tu-backend.onrender.com npm run build
 | Ambiente operativo | `/api/investigations` (rangos de O₂, presión y flujo) |
 | Mediciones | `/api/measurements`, `/api/measurements?quantity` |
 | Documentos y publicaciones | `/api/library`, `/api/investigations/{acc}` |
-| Buscador | `/api/search/all?q&area` y `POST /api/chat` |
+| Buscador | `/api/search/all?q&area` y `POST /api/chat` (con `lang` es/en) |
 | Visor de fuente | `/api/documents/{id}/pages/{n}?quote` |
+
+## Idioma
+
+El selector ES/EN de la cabecera cambia todo el sitio y el idioma de las respuestas del asistente. Los textos viven junto a cada componente como `tr("español", "english")` o como pares `["español", "english"]`. La elección se guarda en el navegador; la primera vez se usa el idioma del navegador.
+
+## Asistente de evidencia
+
+`POST /api/chat` filtra antes de llamar al modelo: las preguntas sin relación con el fuego en el espacio, las peticiones creativas o de código y los intentos de cambiar sus instrucciones reciben una respuesta fija con `off_topic` (`scope`, `task` o `manipulation`) y el panel muestra preguntas sugeridas. Si la pregunta parece una emergencia real en la Tierra, la respuesta incluye un aviso en `notice`.
