@@ -11,6 +11,7 @@ import { Prototipos, Recomendacion, Riesgos } from "./pages/Mision";
 import { Comparacion, Oxigeno, Sensores, Viento } from "./pages/Fuego";
 import { Ambiente, Investigaciones, Mediciones, Pruebas, Publicaciones } from "./pages/Datos";
 import { Historia, Intro } from "./pages/Historia";
+import { Simulador } from "./pages/Simulador";
 
 const VIEWS = {
   inicio: Inicio,
@@ -18,6 +19,7 @@ const VIEWS = {
   riesgos: Riesgos,
   recomendacion: Recomendacion,
   prototipos: Prototipos,
+  simulador: Simulador,
   viento: Viento,
   oxigeno: Oxigeno,
   sensores: Sensores,
