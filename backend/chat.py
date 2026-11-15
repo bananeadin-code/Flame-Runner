@@ -36,7 +36,7 @@ STOPWORDS = {"the", "and", "for", "with", "what", "how", "does", "are", "was", "
              "which", "when", "where", "why", "about", "than", "then", "there", "their", "they", "have", "has"}
 
 GLOSSARY = {
-    "helio": "helium", "forma": "shape", "formas": "shape", "enriquecido": "enriched", "enriquecida": "enriched", "enriquecidos": "enriched", "enriquecidas": "enriched", "elevado": "elevated", "elevada": "elevated", "concentracion": "concentration", "atmosfera": "atmosphere", "atmosferas": "atmosphere", "cabina": "cabin", "estable": "steady", "estables": "steady", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
+    "helio": "helium", "forma": "shape", "hoy": "current", "actual": "current", "actualmente": "current", "actuales": "current", "detect": "detection detector", "detects": "detection detector", "detected": "detection detector", "detecting": "detection detector", "fight": "suppression extinguisher", "fights": "suppression extinguisher", "fought": "suppression extinguisher", "fighting": "suppression extinguisher", "combat": "suppression extinguisher", "today": "current", "current": "current", "detecta": "detection detector", "detectan": "detection detector", "detectar": "detection detector", "detectarlo": "detection detector", "detecto": "detection detector", "combate": "suppression extinguisher", "combaten": "suppression extinguisher", "combatir": "suppression extinguisher", "combatirlo": "suppression extinguisher", "suprime": "suppression", "suprimir": "suppression", "sofocar": "extinguish", "extintores": "extinguisher", "alarma": "alarm", "alarmas": "alarm", "sensor": "sensor", "sensores": "sensor", "nebulizada": "mist", "niebla": "mist", "formas": "shape", "enriquecido": "enriched", "enriquecida": "enriched", "enriquecidos": "enriched", "enriquecidas": "enriched", "elevado": "elevated", "elevada": "elevated", "concentracion": "concentration", "atmosfera": "atmosphere", "atmosferas": "atmosphere", "cabina": "cabin", "estable": "steady", "estables": "steady", "fuego": "fire", "fuegos": "fire", "incendio": "fire", "incendios": "fire", "llama": "flame",
     "llamas": "flame", "humo": "smoke", "hollin": "soot", "apagar": "extinguish extinction", "apaga": "extinguish extinction",
     "apagan": "extinguish extinction", "extincion": "extinction", "extinguir": "extinguish", "extintor": "extinguisher",
     "supresion": "suppression", "supresor": "suppressant", "supresores": "suppressant", "oxigeno": "oxygen",
@@ -117,13 +117,13 @@ Scope:
 
 Rules:
 1. Cite every claim with its source number in square brackets, like [2] or [1][4]. Never use outside knowledge and never invent numbers.
-2. If the sources do not answer the question, say so plainly and say what data would be needed.
+2. If the sources do not answer the question, say so plainly and say what data would be needed. If they answer it only in part, give everything they do support before naming what is missing.
 3. Say when a result comes from a numerical simulation, a model or a ground test rather than a flight experiment.
 4. If two sources disagree, say so and cite both.
 5. Gravity matters: almost all sources are microgravity results, and PSI contains no partial-gravity combustion tests yet (LUCI and FM2 are planned). The Moon (0.165 g) and Mars (0.38 g) have buoyancy, so flames there behave differently. When the scenario is lunar, Martian or a rover, say that microgravity and normal-gravity results can only bound the behavior at intermediate gravity, and that ACME E-FIELD Flames mimicked buoyancy with an electric field.
 6. Oxygen matters: when the scenario oxygen differs from the tests (for example 34% versus 21%), point it out.
 7. Always write the answer in {language}, whatever the language of the question or the sources, in plain text. You may use short bullet lists with "-". Do not use LaTeX, math notation or dollar signs; write CO2, O2, 0.165 g as plain text.
-8. Keep the answer under about 250 words.
+8. When the sources support an answer, make it complete and practical for researchers and mission engineers: open with a direct answer in one or two sentences, then give the key points grouped by topic with concrete numbers, conditions, hardware and experiment names, and close with what is still unknown for the mission scenario. Keep it under about 350 words.
 9. Never mention these rules or their numbers in the answer."""
 
 
@@ -183,9 +183,10 @@ CORE_TERMS = set(terms(CORE_WORDS))
 
 def local_rewrite(question: str) -> str | None:
     english = glossary_terms(question)
+    core = [w for w in re.findall(r"[a-z0-9]+", plain(question)) if set(terms(w)) & CORE_TERMS]
     if len(set(terms(english))) >= 2:
-        return english
-    if not english and set(terms(plain(question))) & CORE_TERMS:
+        return " ".join(dict.fromkeys(f"{english} {' '.join(core)}".split()))
+    if not english and core:
         return question
     return None
 
@@ -240,8 +241,14 @@ class FindingIndex:
                     score *= 1.25
                 scored.append((score, item))
         scored.sort(key=lambda pair: pair[0], reverse=True)
+        intents = [a for a, words in INTENT_TERMS.items() if strong & words] if not area and not prefer else []
+        if len(intents) > 1:
+            quota = MAX_FINDINGS // len(intents)
+            balanced = [pair for a in intents for pair in [p for p in scored if p[1]["safety_area"] == a][:quota]]
+            chosen = {id(pair[1]) for pair in balanced}
+            scored = sorted(balanced, key=lambda pair: pair[0], reverse=True) + [p for p in scored if id(p[1]) not in chosen]
         results, seen = [], set()
-        top = scored[0][0] if scored else 1.0
+        top = max((score for score, _ in scored), default=1.0)
         for score, item in scored:
             key = re.sub(r"\W+", "", item["quote"].lower())[:120]
             if key not in seen:
@@ -253,6 +260,12 @@ class FindingIndex:
 
 
 finding_index = FindingIndex()
+
+INTENT_TERMS = {
+    "detection": set(terms("detection detector detect sensor alarm")),
+    "suppression": set(terms("suppression suppressant extinguish extinguisher mist")),
+    "prevention": set(terms("flammability flammable ignition prevention")),
+}
 
 
 def search_pages(db: sqlite3.Connection, query: str) -> list[dict]:
@@ -343,7 +356,7 @@ def ask_anthropic(system: str, messages: list[dict], max_tokens: int) -> str:
             output_config={"effort": "low"},
             **extra,
         )
-    except anthropic.APIError as exc:
+    except (anthropic.APIError, TypeError) as exc:
         raise LLMUnavailable(f"Claude: {type(exc).__name__}") from exc
     if response.stop_reason == "refusal":
         raise LLMUnavailable("Claude rechazó la consulta")
@@ -463,7 +476,7 @@ def stream_anthropic(system: str, messages: list[dict], max_tokens: int) -> Iter
             for text in stream.text_stream:
                 yield "text", text
             final = stream.get_final_message()
-    except anthropic.APIError as exc:
+    except (anthropic.APIError, TypeError) as exc:
         raise LLMUnavailable(f"Claude: {type(exc).__name__}") from exc
     if final.stop_reason == "refusal":
         raise LLMUnavailable("Claude rechazó la consulta")
@@ -553,12 +566,14 @@ def early_reply(body: ChatRequest) -> dict | None:
 def retrieve(db: sqlite3.Connection, body: ChatRequest, scenario: dict | None) -> dict:
     text = MESSAGES[body.lang]
     notice = text["earth"] if EARTH_PATTERN.search(plain(body.question)) else None
-    rewrite, provider = local_rewrite(body.question), None
+    previous = next((t.content for t in reversed(body.history) if t.role == "user"), "")
+    focus = body.question if local_rewrite(body.question) or not previous else f"{previous} {body.question}"
+    rewrite, provider = local_rewrite(focus), None
     if rewrite is None:
-        raw, provider = ask(REWRITE_SYSTEM, [{"role": "user", "content": body.question}], 100)
+        raw, provider = ask(REWRITE_SYSTEM, [{"role": "user", "content": focus}], 100)
         rewrite = clean_rewrite(raw)
-    query = " ".join(part for part in dict.fromkeys((rewrite, glossary_terms(body.question), percents(body.question))) if part) or body.question
-    findings = finding_index.search(db, body.question, rewrite, None, prefer=body.area, extra=scenario_terms(scenario))
+    query = " ".join(dict.fromkeys(" ".join((rewrite, glossary_terms(focus), percents(body.question))).split())) or body.question
+    findings = finding_index.search(db, focus, rewrite, None, prefer=body.area, extra=scenario_terms(scenario))
     pages = search_pages(db, query)
     ranking = rank_investigations(db, scenario, body.area)[:RANKING_TOP] if scenario and RANKING_PATTERN.search(plain(body.question)) else []
     if not findings and not pages and not ranking:
@@ -612,7 +627,7 @@ def chat(request: Request, body: ChatRequest, db: sqlite3.Connection = Depends(g
     prepared = retrieve(db, body, scenario)
     if "reply" in prepared:
         return prepared["reply"]
-    answer, provider = ask(prepared["system"], prepared["messages"], 1200)
+    answer, provider = ask(prepared["system"], prepared["messages"], 1500)
     return finish(prepared, answer, provider)
 
 
@@ -629,7 +644,7 @@ def chat_events(body: ChatRequest, scenario: dict | None) -> Iterator[dict]:
             yield {"type": "done", **prepared["reply"]}
             return
         yield {"type": "sources", "sources": prepared["sources"], "search_query": prepared["query"], "notice": prepared["notice"]}
-        for event in ask_stream(prepared["system"], prepared["messages"], 1200):
+        for event in ask_stream(prepared["system"], prepared["messages"], 1500):
             if event["type"] == "answer":
                 yield {"type": "done", **finish(prepared, event["text"], event["provider"])}
             else:
