@@ -8,6 +8,89 @@ import { pick, tr } from "../lib/i18n";
 import { AskButton, CrossLink, MissionBar, Page } from "../components/Layout";
 import { FindingCard } from "../components/FindingCard";
 import { Bars, Card, ErrorBox, Figure, Kpi, KpiRow, Loading, Note, Reveal, SectionTitle } from "../components/ui";
+import { Link } from "../components/Link";
+
+function PartialGravity() {
+  const { data } = useApi("/api/gravity-bounds");
+  const { data: compared } = useApi("/api/findings", { q: "normal gravity", limit: 4 });
+  return (
+    <>
+      <SectionTitle
+        sub={tr(
+          "La NASA prepara el regreso a la Luna, pero PSI todavía no tiene ningún experimento de combustión en gravedad parcial. Así se puede razonar mientras llegan esos datos.",
+          "NASA is preparing the return to the Moon, but PSI does not yet hold any partial-gravity combustion experiment. This is how to reason until that data arrives.",
+        )}
+      >
+        {tr("Gravedad parcial: lo que falta y cómo acotarlo", "Partial gravity: what is missing and how to bound it")}
+      </SectionTitle>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card title={tr("Sin datos en PSI todavía", "No PSI data yet")}>
+          <p className="text-sm text-gris-oscuro">
+            {tr(
+              "Ninguna prueba de PSI se hizo a 0,165 g (Luna) ni a 0,38 g (Marte). Se espera que lleguen de LUCI (Lunar-g Combustion Investigation) y FM2 (Flammability of Materials on the Moon). Los hallazgos marcados como «g residual o parcial» son vuelos parabólicos y vibraciones, no pruebas en gravedad lunar.",
+              "No PSI test was run at 0.165 g (Moon) or 0.38 g (Mars). Data is expected from LUCI (Lunar-g Combustion Investigation) and FM2 (Flammability of Materials on the Moon). Findings tagged as “residual or partial g” are parabolic flights and g-jitter, not lunar-gravity tests.",
+            )}
+          </p>
+        </Card>
+        <Card title={tr("Acotar entre 0 g y 1 g", "Bound between 0 g and 1 g")}>
+          <p className="text-sm text-gris-oscuro">
+            {tr(
+              "Lo que ocurre a gravedad intermedia debería quedar entre los resultados de microgravedad y los de la Tierra. Saffire-II quemó las mismas muestras en ambas condiciones:",
+              "What happens at intermediate gravity should fall between the microgravity and Earth results. Saffire-II burned the same samples in both conditions:",
+            )}
+          </p>
+          {data?.pairs?.length > 0 && (
+            <table className="mt-3 w-full text-left text-sm">
+              <thead className="text-xs text-gris-oscuro">
+                <tr>
+                  <th className="py-1 font-medium">{tr("Muestra", "Sample")}</th>
+                  <th className="py-1 text-right font-medium">0 g</th>
+                  <th className="py-1 text-right font-medium">1 g</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.pairs.map((pair) => (
+                  <tr key={pair.test_id} className="border-t border-linea">
+                    <td className="py-1">
+                      {pair.fuel} <small className="text-gris-oscuro">({pair.test_code})</small>
+                    </td>
+                    <td className="py-1 text-right tabular-nums">{pair.microgravity_mm} mm</td>
+                    <td className="py-1 text-right tabular-nums">{pair.normal_gravity_mm} mm</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <Note>{tr("Longitud quemada de cada muestra. Un material que no arde en 1 g puede arder en microgravedad, y al revés.", "Burned length of each sample. A material that does not burn at 1 g may burn in microgravity, and vice versa.")}</Note>
+        </Card>
+        <Card title={tr("E-FIELD: imitar la flotación", "E-FIELD: mimicking buoyancy")}>
+          <p className="text-sm text-gris-oscuro">
+            {tr(
+              `ACME E-FIELD Flames aplicó un campo eléctrico a las llamas en la ISS. El campo empuja los iones de la llama y produce un efecto parecido a la flotación, una forma de estudiar «gravedad artificial» sin salir de la órbita (${data?.efield_tests ?? "—"} pruebas tabuladas).`,
+              `ACME E-FIELD Flames applied an electric field to flames on the ISS. The field pushes the flame's ions and produces an effect similar to buoyancy, a way to study “artificial gravity” without leaving orbit (${data?.efield_tests ?? "—"} tabulated tests).`,
+            )}
+          </p>
+          <Link to="investigaciones" query={{ acc: "PSI-22" }} className="mt-3 inline-block text-sm font-medium text-azul hover:underline">
+            {tr("Ver E-FIELD Flames", "View E-FIELD Flames")} →
+          </Link>
+        </Card>
+      </div>
+      {compared?.findings?.length > 0 && (
+        <>
+          <h3 className="mt-8 mb-3 text-xl">{tr("Qué separa la microgravedad de la Tierra", "What separates microgravity from Earth")}</h3>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {compared.findings.map((f) => (
+              <FindingCard key={f.id} finding={f} compact />
+            ))}
+          </div>
+        </>
+      )}
+      <div className="mt-6">
+        <AskButton question={tr("¿Cómo se puede estimar el comportamiento del fuego en la Luna con datos de microgravedad y de la Tierra?", "How can fire behavior on the Moon be estimated from microgravity and Earth data?")} />
+      </div>
+    </>
+  );
+}
 
 const FUEL_CLASSES = ["solid", "droplet", "gas", "aerosol"];
 const AGENT_QUERY = { He: "helium", CO2: "CO2", N2: "nitrogen", Xe: "xenon", Ar: "argon" };
@@ -90,9 +173,16 @@ export function Riesgos() {
                   .sort((a, b) => b[1] - a[1])
                   .map(([g, n]) => ({ key: g, label: label(GRAVITY_LABEL, g), value: n, tone: g === "partial_gravity" ? "rojo" : "" }))}
               />
-              <Note>{tr("Casi toda la evidencia es de microgravedad. La gravedad parcial de la Luna (0,165 g) y Marte (0,38 g) apenas está estudiada.", "Almost all the evidence comes from microgravity. The partial gravity of the Moon (0.165 g) and Mars (0.38 g) is barely studied.")}</Note>
+              <Note>
+                {tr(
+                  "Casi toda la evidencia es de microgravedad. No hay pruebas de combustión a la gravedad de la Luna (0,165 g) ni de Marte (0,38 g): lo marcado en rojo son menciones y vuelos parabólicos.",
+                  "Almost all the evidence comes from microgravity. There are no combustion tests at lunar (0.165 g) or Martian (0.38 g) gravity: the red bar holds mentions and parabolic flights.",
+                )}
+              </Note>
             </Card>
           </div>
+
+          <PartialGravity />
 
           <SectionTitle sub={tr("Limitaciones y preguntas abiertas que los investigadores dejaron escritas, con su cita literal.", "Limitations and open questions the researchers wrote down, with their exact quote.")}>
             {tr("Huecos señalados por los autores", "Gaps flagged by the authors")}

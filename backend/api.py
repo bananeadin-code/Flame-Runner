@@ -13,6 +13,20 @@ AREAS = ("prevention", "detection", "suppression", "fundamental")
 O2_TOLERANCE = 0.03
 PRESSURE_TOLERANCE = 0.15
 SOURCE_WEIGHT = {"report": 1.0, "fact_sheet": 0.9, "guide": 0.9, "science_document": 0.85}
+HARDWARE = {
+    "acme": ("PSI-10", "PSI-20", "PSI-21", "PSI-22", "PSI-23", "PSI-159"),
+    "mdca": ("PSI-69", "PSI-68", "PSI-39"),
+    "spice_duct": ("PSI-26", "PSI-25", "PSI-107", "PSI-106"),
+    "saffire": ("PSI-98", "PSI-99", "PSI-100"),
+    "smoke_dust": ("PSI-102", "PSI-101", "PSI-47"),
+}
+HARDWARE_OF = {accession: family for family, members in HARDWARE.items() for accession in members}
+def hardware_of(accession: str, project_type: str | None) -> str | None:
+    if accession in HARDWARE_OF:
+        return HARDWARE_OF[accession]
+    return "ground" if "Ground" in (project_type or "") else None
+
+
 TEST_FIELDS = ("id", "accession", "test_code", "test_date", "fuel", "fuel_class", "configuration", "diluent",
                "o2_min", "o2_max", "pressure_kpa", "flow_min_cm_s", "flow_max_cm_s", "ignited", "outcome",
                "burn_time_s", "is_approximate")
@@ -75,7 +89,7 @@ def stats(db: sqlite3.Connection = Depends(get_db)) -> dict:
 
 @router.get("/scenarios")
 def scenarios(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
-    return rows(db.execute("SELECT * FROM scenarios ORDER BY pressure_kpa DESC"))
+    return rows(db.execute("SELECT * FROM scenarios ORDER BY pressure_kpa DESC, o2_fraction"))
 
 
 @router.get("/investigations")
@@ -93,7 +107,8 @@ def investigations(db: sqlite3.Connection = Depends(get_db)) -> list[dict]:
                   (SELECT MIN(flow_min_cm_s) FROM tests t WHERE t.accession = i.accession) AS flow_min,
                   (SELECT MAX(flow_max_cm_s) FROM tests t WHERE t.accession = i.accession) AS flow_max
            FROM investigations i ORDER BY findings DESC"""))
-    return [item | {"psi_url": psi_url(item["accession"])} for item in items]
+    return [item | {"psi_url": psi_url(item["accession"]), "hardware": hardware_of(item["accession"], item["project_type"])}
+            for item in items]
 
 
 @router.get("/investigations/{accession}")
@@ -103,7 +118,7 @@ def investigation(accession: str, db: sqlite3.Connection = Depends(get_db)) -> d
                   research_impacts, start_date, end_date FROM investigations WHERE accession = ?""", (accession,)).fetchone()
     if row is None:
         raise HTTPException(404, f"Investigación desconocida: {accession}")
-    detail = dict(row) | {"psi_url": psi_url(accession)}
+    detail = dict(row) | {"psi_url": psi_url(accession), "hardware": hardware_of(accession, row["project_type"])}
     detail["publications"] = [
         pub | {"doi_url": doi_url(pub["doi"])}
         for pub in rows(db.execute(

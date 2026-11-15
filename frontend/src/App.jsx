@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRoute } from "./lib/route";
 import { useApp } from "./state/context";
 import { tr } from "./lib/i18n";
@@ -12,6 +12,9 @@ import { Comparacion, Oxigeno, Sensores, Viento } from "./pages/Fuego";
 import { Ambiente, Investigaciones, Mediciones, Pruebas, Publicaciones } from "./pages/Datos";
 import { Historia, Intro } from "./pages/Historia";
 import { Simulador } from "./pages/Simulador";
+import { Comparar, Ranking } from "./pages/Ranking";
+import { Aplicaciones } from "./pages/Aplicaciones";
+import { href } from "./lib/route";
 
 const VIEWS = {
   inicio: Inicio,
@@ -19,6 +22,9 @@ const VIEWS = {
   riesgos: Riesgos,
   recomendacion: Recomendacion,
   prototipos: Prototipos,
+  aplicaciones: Aplicaciones,
+  ranking: Ranking,
+  comparar: Comparar,
   simulador: Simulador,
   viento: Viento,
   oxigeno: Oxigeno,
@@ -34,10 +40,17 @@ const VIEWS = {
 
 export default function App() {
   const { route, query } = useRoute();
-  const { search, source } = useApp();
+  const { search, source, openSearch, scenarios, setScenario } = useApp();
   const [menu, setMenu] = useState(false);
   const name = PAGES[route] ? route : "inicio";
   const View = VIEWS[name];
+  const shared = query.pregunta;
+  useEffect(() => {
+    if (!shared || !scenarios.length) return;
+    if (scenarios.some((s) => s.id === query.escenario)) setScenario(query.escenario);
+    openSearch({ text: shared, ask: true });
+    window.history.replaceState(null, "", href(name));
+  }, [shared, scenarios.length]);
   return (
     <>
       <Header route={name} onMenu={() => setMenu(true)} />

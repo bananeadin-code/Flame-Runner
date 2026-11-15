@@ -9,6 +9,40 @@ import { AskButton, CrossLink, MissionBar, Page } from "../components/Layout";
 import { FindingCard } from "../components/FindingCard";
 import { LegendDot, ScatterMap } from "../components/ScatterMap";
 import { Bars, Card, Chip, ChipRow, ErrorBox, Figure, Kpi, KpiRow, Loading, Note, SectionTitle, Tag } from "../components/ui";
+import { Link } from "../components/Link";
+
+function HighOxygen({ tests }) {
+  const top = Math.max(...tests.map((t) => t.o2_max), 0);
+  const rich = tests.filter((t) => t.o2_max >= 0.6);
+  const byInvestigation = {};
+  rich.forEach((t) => {
+    byInvestigation[t.accession] = (byInvestigation[t.accession] || 0) + 1;
+  });
+  if (!rich.length) return null;
+  return (
+    <div className="mt-8 grid gap-6 rounded-xl bg-noche p-5 text-white sm:p-6 lg:grid-cols-[auto_1fr] lg:items-center">
+      <div>
+        <small className="text-xs tracking-wide text-azul-palido uppercase">{tr("Máximo probado en microgravedad", "Highest tested in microgravity")}</small>
+        <b className="block font-serif text-5xl text-rojo">{num(top * 100, 0)} % O₂</b>
+      </div>
+      <div className="text-sm text-white/85">
+        <p>
+          {tr(
+            `En ACME CFI-G la cámara se llenó de nitrógeno con un gas inflamable (por ejemplo propano) y del quemador esférico salía una mezcla de hasta 85 % de oxígeno: una llama «de dentro hacia afuera». Son las pruebas con más oxígeno de PSI (${rich.length} por encima del 60 %), muy por encima del 30–34 % previsto para la Luna.`,
+            `In ACME CFI-G the chamber was filled with nitrogen and a flammable gas (for example propane), while a mixture of up to 85 % oxygen flowed from the spherical burner: an “inside-out” flame. These are the highest-oxygen tests in PSI (${rich.length} above 60 %), far above the 30–34 % planned for the Moon.`,
+          )}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {Object.entries(byInvestigation).map(([acc, n]) => (
+            <Link key={acc} to="investigaciones" query={{ acc }} className="rounded-full border border-white/30 px-3 py-1 text-xs hover:bg-white/10">
+              {acc} · {n} {tr("pruebas", "tests")}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Findings({ params, title, sub }) {
   const { scenarioId, area } = useApp();
@@ -199,6 +233,7 @@ export function Oxigeno() {
           </div>
         </>
       )}
+      {data && <HighOxygen tests={tests} />}
       <Findings
         params={{ q: "oxygen", limit: 6 }}
         title={tr("Lo que dicen los experimentos sobre el oxígeno", "What the experiments say about oxygen")}

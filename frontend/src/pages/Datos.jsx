@@ -2,10 +2,41 @@ import { useMemo, useState } from "react";
 import { useApp } from "../state/context";
 import { useApi } from "../lib/useApi";
 import { href } from "../lib/route";
-import { AREA_LABEL, DOC_TYPE_LABEL, FUEL_CLASS_LABEL, OUTCOME_LABEL, QUANTITY_LABEL, label, num, year } from "../lib/format";
+import { AREA_LABEL, DOC_TYPE_LABEL, FUEL_CLASS_LABEL, OUTCOME_LABEL, QUANTITY_LABEL, VARIABLE_LABEL, label, num, year } from "../lib/format";
 import { MEDIA } from "../content/media";
 import { pick, tr } from "../lib/i18n";
 import { AskButton, MissionBar, Page } from "../components/Layout";
+import { apiUrl } from "../lib/api";
+import { Link } from "../components/Link";
+import { HARDWARE } from "../content/narrative";
+import { HardwareFamilies } from "./Ranking";
+
+function DownloadCsv({ path, params, children }) {
+  return (
+    <a href={apiUrl(path, params)} download className="inline-flex items-center gap-2 rounded-full border border-noche px-4 py-1.5 text-sm hover:bg-noche hover:text-white">
+      <span aria-hidden="true">↓</span> {children}
+    </a>
+  );
+}
+
+function TestVariables({ accession }) {
+  const { data } = useApi("/api/compare", { ids: accession });
+  const item = data?.investigations?.[0];
+  if (!item || !item.tests) return null;
+  const group = (status) => item.variables.filter((v) => v.status === status).map((v) => pick(VARIABLE_LABEL[v.variable]));
+  return (
+    <div className="rounded-lg bg-claro/60 p-3 text-sm">
+      <p>
+        <b>{tr("Varió entre pruebas: ", "Varied between tests: ")}</b>
+        {group("varied").join(", ") || "—"}
+      </p>
+      <p className="mt-1">
+        <b>{tr("Quedó fijo: ", "Stayed fixed: ")}</b>
+        {group("fixed").join(", ") || "—"}
+      </p>
+    </div>
+  );
+}
 import { Bars, Card, Chip, ChipRow, ErrorBox, Figure, Kpi, KpiRow, Loading, Note, SectionTitle, Tag } from "../components/ui";
 
 function InvestigationDetail({ accession, onClose }) {
@@ -38,9 +69,21 @@ function InvestigationDetail({ accession, onClose }) {
                 {data.hypothesis}
               </p>
             )}
-            <a href={data.psi_url} target="_blank" rel="noreferrer" className="inline-block rounded-full bg-azul px-4 py-1.5 text-white hover:bg-azul-claro">
-              {tr("Ver en NASA PSI", "View on NASA PSI")} ↗
-            </a>
+            {data.hardware && HARDWARE[data.hardware] && (
+              <p>
+                <b>{tr("Hardware. ", "Hardware. ")}</b>
+                {pick(HARDWARE[data.hardware].name)}
+              </p>
+            )}
+            <TestVariables accession={accession} />
+            <div className="flex flex-wrap gap-2">
+              <a href={data.psi_url} target="_blank" rel="noreferrer" className="inline-block rounded-full bg-azul px-4 py-1.5 text-white hover:bg-azul-claro">
+                {tr("Ver en NASA PSI", "View on NASA PSI")} ↗
+              </a>
+              <Link to="comparar" query={{ ids: accession }} className="inline-block rounded-full border border-noche px-4 py-1.5 hover:bg-noche hover:text-white">
+                {tr("Comparar con otras", "Compare with others")}
+              </Link>
+            </div>
           </div>
           <div>
             <KpiRow>
@@ -106,6 +149,10 @@ export function Investigaciones({ query }) {
               <Bars items={Object.entries(platforms).map(([k, v]) => ({ key: k, label: k, value: v }))} />
             </Card>
           </div>
+          <SectionTitle sub={tr("Varias investigaciones comparten el mismo equipo a bordo, lo que hace comparables sus condiciones y mediciones.", "Several investigations share the same on-board equipment, which makes their conditions and measurements comparable.")}>
+            {tr("Familias de hardware", "Hardware families")}
+          </SectionTitle>
+          <HardwareFamilies investigations={data} />
           {selected && (
             <div className="mt-8">
               <InvestigationDetail key={selected} accession={selected} onClose={() => setSelected(null)} />
@@ -194,6 +241,12 @@ export function Pruebas() {
           {tr("Solo dentro de", "Only within")} {scenario?.name || tr("el escenario", "the scenario")}
         </Chip>
       </ChipRow>
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <DownloadCsv path="/api/export/tests.csv" params={{ scenario: scenarioId, fuel_class: fuelClass || undefined, only_in_scenario: onlyScenario }}>
+          {tr("Descargar CSV para modelado", "Download CSV for modeling")}
+        </DownloadCsv>
+        <small className="text-gris-oscuro">{tr("Con los filtros actuales, unidades normalizadas y una columna que indica si la prueba cae dentro del escenario.", "With the current filters, normalized units and a column marking whether each test falls within the scenario.")}</small>
+      </div>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (
@@ -369,6 +422,12 @@ export function Mediciones() {
           </Chip>
         ))}
       </ChipRow>
+      <div className="mb-6 flex flex-wrap gap-3">
+        <DownloadCsv path="/api/export/measurements.csv" params={{ quantity }}>
+          {tr("CSV de esta magnitud", "CSV for this quantity")}
+        </DownloadCsv>
+        <DownloadCsv path="/api/export/measurements.csv">{tr("CSV de todas las mediciones", "CSV of all measurements")}</DownloadCsv>
+      </div>
       {loading && <Loading />}
       <ErrorBox error={error} />
       {data && (

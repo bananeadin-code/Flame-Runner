@@ -35,15 +35,18 @@ VITE_API_URL=https://tu-backend.onrender.com npm run build
 | Página | Peticiones |
 |---|---|
 | Inicio | `/api/stats`, `/api/gaps`, `/api/scenarios` |
-| Brechas y prioridades | `/api/gaps` |
+| Ranking por escenario | `/api/ranking?scenario&area` |
+| Comparar investigaciones | `/api/compare?ids`, `/api/investigations` |
+| Equipos y aplicaciones en la Tierra | `/api/findings?area&q`, `/api/documents/{id}/pages/{n}?quote` |
+| Brechas y prioridades | `/api/gaps`, `/api/gravity-bounds`, `/api/findings?q` |
 | Qué dice la evidencia | `/api/findings?scenario&area&limit` |
 | Extintores y agentes | `/api/suppressants`, `/api/findings?area=suppression&q` |
 | Flujo, Oxígeno | `/api/tests?scenario`, `/api/findings?q&scenario` |
 | Detección | `/api/findings?area=detection&type` |
 | Investigaciones | `/api/investigations`, `/api/investigations/{acc}` |
-| Resultados de pruebas | `/api/tests?scenario&fuel_class&only_in_scenario` |
+| Resultados de pruebas | `/api/tests?scenario&fuel_class&only_in_scenario`, `/api/export/tests.csv` |
 | Ambiente operativo | `/api/investigations` (rangos de O₂, presión y flujo) |
-| Mediciones | `/api/measurements`, `/api/measurements?quantity` |
+| Mediciones | `/api/measurements`, `/api/measurements?quantity`, `/api/export/measurements.csv` |
 | Documentos y publicaciones | `/api/library`, `/api/investigations/{acc}` |
 | Buscador | `/api/search/all?q&area` y `POST /api/chat/stream` (con `lang` es/en) |
 | Visor de fuente | `/api/documents/{id}/pages/{n}?quote` |

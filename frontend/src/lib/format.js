@@ -32,7 +32,7 @@ export const OUTCOME_LABEL = {
 
 export const GRAVITY_LABEL = {
   microgravity: ["Microgravedad", "Microgravity"],
-  partial_gravity: ["Gravedad parcial", "Partial gravity"],
+  partial_gravity: ["g residual o parcial (menciones)", "Residual or partial g (mentions)"],
   normal_gravity: ["Gravedad terrestre", "Earth gravity"],
   unspecified: ["Sin especificar", "Unspecified"],
 };
@@ -83,6 +83,16 @@ export const QUANTITY_LABEL = {
   normal_gravity_spread_rate: ["Velocidad de propagación en 1 g", "Spread rate at 1 g"],
   pressure_min: ["Presión mínima", "Minimum pressure"],
   pressure_max: ["Presión máxima", "Maximum pressure"],
+};
+
+export const VARIABLE_LABEL = {
+  fuel: ["Combustible", "Fuel"],
+  configuration: ["Configuración", "Configuration"],
+  diluent: ["Diluyente", "Diluent"],
+  o2_percent: ["Oxígeno (%)", "Oxygen (%)"],
+  pressure_kpa: ["Presión (kPa)", "Pressure (kPa)"],
+  flow_cm_s: ["Flujo (cm/s)", "Flow (cm/s)"],
+  outcome: ["Resultado", "Outcome"],
 };
 
 export const label = (map, key) => (map[key] ? pick(map[key]) : key ? key.replaceAll("_", " ") : tr("Sin dato", "No data"));

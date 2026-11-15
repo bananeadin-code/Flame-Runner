@@ -1,8 +1,52 @@
 export const SCENARIO_TEXT = {
   iss: { name: ["ISS (nominal)", "ISS (nominal)"], notes: ["Atmósfera estándar a nivel del mar", "Standard sea-level atmosphere"] },
   eva_staging: { name: ["Preparación de EVA", "EVA preparation"], notes: ["10.2 psia, usada antes de paseos espaciales", "10.2 psia, used before spacewalks"] },
-  lunar: { name: ["Hábitat lunar (Artemis)", "Lunar habitat (Artemis)"], notes: ["Atmósfera de exploración recomendada: 8.2 psia, 34 % O2", "Recommended exploration atmosphere: 8.2 psia, 34 % O2"] },
+  rover: { name: ["Rover presurizado", "Pressurized rover"], notes: ["Límite del reto: 30 % de O₂ a 10,2 psi en la Luna", "Challenge boundary: 30 % O₂ at 10.2 psi on the Moon"] },
+  lunar: { name: ["Hábitat lunar (Artemis)", "Lunar habitat (Artemis)"], notes: ["Atmósfera de exploración: 34 % de O₂ a 8,2 psia, dentro del rango del reto (≥30 %, ≤10,2 psi)", "Exploration atmosphere: 34 % O₂ at 8.2 psia, within the challenge range (≥30 %, ≤10.2 psi)"] },
   mars: { name: ["Hábitat en Marte", "Mars habitat"], notes: ["Misma atmósfera de exploración, gravedad marciana", "Same exploration atmosphere, Martian gravity"] },
+  suit: { name: ["Traje espacial (referencia)", "Spacesuit (reference)"], notes: ["100 % de O₂ a 4,3 psi: el caso extremo", "100 % O₂ at 4.3 psi: the extreme case"] },
+};
+
+export const HARDWARE = {
+  acme: {
+    name: ["ACME · Combustion Integrated Rack", "ACME · Combustion Integrated Rack"],
+    text: [
+      "Seis experimentos con llamas de gas que comparten el mismo hardware modular ACME dentro del CIR. BRE quema gas, pero estudia la inflamabilidad de materiales en atmósfera quieta; E-FIELD imita la flotación con un campo eléctrico; CFI-G llegó hasta 85 % de oxígeno.",
+      "Six gas-flame experiments sharing the same modular ACME hardware inside the CIR. BRE burns gas but studies material flammability in still air; E-FIELD mimics buoyancy with an electric field; CFI-G reached 85 % oxygen.",
+    ],
+  },
+  mdca: {
+    name: ["MDCA · gotas en el CIR", "MDCA · droplets in the CIR"],
+    text: [
+      "FLEX, FLEX-2 y CFI quemaron gotas de combustible líquido con el Multi-user Droplet Combustion Apparatus del CIR.",
+      "FLEX, FLEX-2 and CFI burned liquid fuel droplets with the CIR's Multi-user Droplet Combustion Apparatus.",
+    ],
+  },
+  spice_duct: {
+    name: ["Ducto de flujo de SPICE · MSG", "SPICE flow duct · MSG"],
+    text: [
+      "BASS, BASS-II, SPICE y SLICE usaron el ducto con ventilador construido para SPICE dentro del Microgravity Science Glovebox, con combustibles sólidos y gaseosos.",
+      "BASS, BASS-II, SPICE and SLICE used the fan-driven flow duct built for SPICE inside the Microgravity Science Glovebox, with solid and gaseous fuels.",
+    ],
+  },
+  saffire: {
+    name: ["Saffire · naves Cygnus", "Saffire · Cygnus spacecraft"],
+    text: [
+      "Incendios a gran escala en naves de carga Cygnus ya desacopladas, para estudiar el fuego en tamaño real sin poner en riesgo a la tripulación.",
+      "Large-scale fires on Cygnus cargo ships after undocking, to study fire at real scale without risking the crew.",
+    ],
+  },
+  smoke_dust: {
+    name: ["Humo y polvo · SAME, SAME-R, DAFT", "Smoke and dust · SAME, SAME-R, DAFT"],
+    text: [
+      "Uno de los instrumentos que midió humo en SAME y SAME-R se reutilizó en DAFT para medir polvo: la misma técnica sirve para distinguir humo de partículas inofensivas.",
+      "One of the instruments that measured smoke in SAME and SAME-R was reused in DAFT to measure dust: the same technique helps tell smoke from harmless particles.",
+    ],
+  },
+  ground: {
+    name: ["Investigación en tierra", "Ground research"],
+    text: ["Estudios de laboratorio y modelado que apoyan a los experimentos de vuelo.", "Laboratory and modeling studies that support the flight experiments."],
+  },
 };
 
 export const EXAMPLES = [

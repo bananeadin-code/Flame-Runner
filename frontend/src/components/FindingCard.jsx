@@ -1,4 +1,5 @@
 import { pick, tr } from "../lib/i18n";
+import { useState } from "react";
 import { useApp } from "../state/context";
 import { AREA_LABEL, FINDING_TYPE_LABEL, GRAVITY_LABEL, label, num } from "../lib/format";
 import { Tag } from "./ui";
@@ -11,6 +12,29 @@ const PART_LABEL = {
   oxygen: ["cercanía de O₂ al escenario", "O₂ closeness to the scenario"],
   gravity: ["coincidencia de gravedad", "gravity match"],
 };
+
+function CopyCitation({ item }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    const text = [
+      item.statement || `“${item.quote}”`,
+      `${item.document_title}, ${tr("p.", "p.")} ${item.page_no}`,
+      item.accession && `NASA PSI ${item.accession}`,
+      item.source_url,
+    ]
+      .filter(Boolean)
+      .join(" — ");
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button onClick={copy} className="font-medium text-gris-oscuro hover:text-noche hover:underline">
+      {copied ? tr("✓ Cita copiada", "✓ Citation copied") : tr("Copiar cita", "Copy citation")}
+    </button>
+  );
+}
 
 export function SourceActions({ item }) {
   const { openSource } = useApp();
@@ -31,6 +55,7 @@ export function SourceActions({ item }) {
           {tr("Abrir en", "Open in")} {item.source_label} ↗
         </a>
       )}
+      <CopyCitation item={item} />
     </div>
   );
 }

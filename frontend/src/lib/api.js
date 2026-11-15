@@ -51,6 +51,10 @@ async function request(path, options = {}) {
   return response.json();
 }
 
+export function apiUrl(path, params) {
+  return `${BASE}${path}${queryString(params)}`;
+}
+
 export function apiGet(path, params, signal) {
   return request(`${path}${queryString(params)}`, { signal });
 }

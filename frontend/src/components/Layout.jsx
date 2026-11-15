@@ -14,7 +14,7 @@ export function ScenarioSelect({ dark = false, showLabel = false }) {
       <select
         value={scenarioId}
         onChange={(e) => setScenario(e.target.value)}
-        className={`w-32 max-w-[11rem] rounded-full border px-2 py-1.5 text-sm outline-none min-[400px]:w-40 sm:w-auto sm:max-w-none sm:px-3 ${dark ? "border-white/30 bg-noche/60 text-white" : "border-linea bg-white"}`}
+        className={`w-32 max-w-[11rem] rounded-full border px-2 py-1.5 text-sm outline-none min-[400px]:w-40 sm:w-auto sm:max-w-none lg:max-w-[13rem] xl:max-w-none sm:px-3 ${dark ? "border-white/30 bg-noche/60 text-white" : "border-linea bg-white"}`}
         aria-label={tr("Escenario de misión", "Mission scenario")}
       >
         {scenarios.map((s) => (
@@ -76,7 +76,7 @@ export function Header({ route, onMenu }) {
         <br />
         Runner
       </Link>
-      <nav className="mx-auto hidden gap-6 lg:flex" aria-label={tr("Principal", "Main")}>
+      <nav className="mx-auto hidden gap-5 lg:flex xl:gap-6" aria-label={tr("Principal", "Main")}>
         {NAV.map(([to, text, group]) => (
           <Link
             key={to}
@@ -101,7 +101,7 @@ export function Header({ route, onMenu }) {
             <circle cx="10.5" cy="10.5" r="7" />
             <path d="M16 16l5 5" />
           </svg>
-          <span className="hidden md:inline">{tr("Buscar o preguntar", "Search or ask")}</span>
+          <span className="hidden md:inline lg:hidden xl:inline">{tr("Buscar o preguntar", "Search or ask")}</span>
         </button>
       </div>
     </header>
@@ -117,7 +117,7 @@ export function Menu({ onClose }) {
           ×
         </button>
       </div>
-      <div className="mx-auto mt-10 grid max-w-6xl gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-5">
+      <div className="mx-auto mt-10 grid max-w-6xl gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-3 xl:grid-cols-6">
         {MENU.map(([title, ids]) => (
           <div key={title[0]}>
             <h3 className="mb-4 border-b border-white/15 pb-2 text-xl text-azul-palido">{pick(title)}</h3>

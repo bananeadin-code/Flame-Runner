@@ -142,11 +142,15 @@ CREATE TABLE IF NOT EXISTS scenarios (
     description  TEXT
 );
 
-INSERT OR IGNORE INTO scenarios VALUES
+INSERT INTO scenarios VALUES
     ('iss',          'ISS (nominal)',                    0.21,  101.3, 0.0,   'Atmósfera estándar a nivel del mar'),
     ('eva_staging',  'Preparación de EVA',               0.265, 70.3,  0.0,   '10.2 psia, usada antes de paseos espaciales'),
-    ('lunar',        'Hábitat lunar (Artemis)',          0.34,  56.5,  0.165, 'Atmósfera de exploración recomendada: 8.2 psia, 34 % O2'),
-    ('mars',         'Hábitat en Marte',                 0.34,  56.5,  0.38,  'Misma atmósfera de exploración, gravedad marciana');
+    ('rover',        'Rover presurizado',                0.30,  70.3,  0.165, 'Límite del reto: 30 % O2 a 10.2 psi en la superficie lunar'),
+    ('lunar',        'Hábitat lunar (Artemis)',          0.34,  56.5,  0.165, 'Atmósfera de exploración: 34 % O2 a 8.2 psia, dentro del rango del reto'),
+    ('mars',         'Hábitat en Marte',                 0.34,  56.5,  0.38,  'Misma atmósfera de exploración, gravedad marciana'),
+    ('suit',         'Traje espacial (referencia)',      1.0,   29.6,  0.165, '100 % O2 a 4.3 psi, caso extremo de referencia')
+ON CONFLICT(id) DO UPDATE SET name = excluded.name, o2_fraction = excluded.o2_fraction, pressure_kpa = excluded.pressure_kpa,
+    gravity_g = excluded.gravity_g, description = excluded.description;
 
 CREATE INDEX IF NOT EXISTS idx_tests_accession ON tests(accession);
 CREATE INDEX IF NOT EXISTS idx_tests_o2 ON tests(o2_min, o2_max);
