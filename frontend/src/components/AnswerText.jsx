@@ -1,3 +1,5 @@
+import { tr } from "../lib/i18n";
+
 function inline(text, onCite, cited) {
   const parts = text.split(/(\*\*[^*]+\*\*|\[\d+\])/g).filter(Boolean);
   return parts.map((part, i) => {
@@ -12,7 +14,7 @@ function inline(text, onCite, cited) {
           key={i}
           onClick={() => known && onCite(n)}
           className={`mx-0.5 inline-flex min-w-5 items-center justify-center rounded px-1 align-super text-[0.7rem] font-semibold ${known ? "bg-azul/10 text-azul hover:bg-azul hover:text-white" : "bg-claro text-gris"}`}
-          aria-label={`Fuente ${n}`}
+          aria-label={`${tr("Fuente", "Source")} ${n}`}
         >
           {n}
         </button>

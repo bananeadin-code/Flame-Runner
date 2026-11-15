@@ -1,3 +1,4 @@
+import { tr } from "../lib/i18n";
 import { useMemo, useState } from "react";
 import { num } from "../lib/format";
 
@@ -20,7 +21,8 @@ export function ScatterMap({ points, xDomain, yDomain, xLabel, yLabel, marker, v
   );
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${yLabel} frente a ${xLabel}`}>
+      <div className="-mx-1 overflow-x-auto px-1">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[480px]" role="img" aria-label={`${yLabel} ${tr("frente a", "versus")} ${xLabel}`}>
         {ticks(...xDomain).map((t) => (
           <g key={`x${t}`}>
             <line x1={sx(t)} x2={sx(t)} y1={PAD.t} y2={H - PAD.b} className="stroke-claro" />
@@ -55,6 +57,7 @@ export function ScatterMap({ points, xDomain, yDomain, xLabel, yLabel, marker, v
             className={`${p.highlight ? "fill-rojo" : "fill-azul/45"} cursor-pointer transition-[r] hover:opacity-100`}
             onMouseEnter={() => setHover(p)}
             onMouseLeave={() => setHover(null)}
+            onClick={() => setHover(hover === p ? null : p)}
           />
         ))}
         {marker && marker.x >= xDomain[0] && marker.x <= xDomain[1] && marker.y >= yDomain[0] && marker.y <= yDomain[1] && (
@@ -67,8 +70,9 @@ export function ScatterMap({ points, xDomain, yDomain, xLabel, yLabel, marker, v
           </g>
         )}
       </svg>
+      </div>
       {hover && (
-        <div className="pointer-events-none absolute top-2 right-2 max-w-xs rounded-lg bg-noche px-3 py-2 text-xs text-white shadow-lg">
+        <div className="pointer-events-none absolute top-2 right-2 left-2 rounded-lg sm:left-auto sm:max-w-xs rounded-lg bg-noche px-3 py-2 text-xs text-white shadow-lg">
           {hover.title}
         </div>
       )}
