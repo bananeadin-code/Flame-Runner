@@ -14,6 +14,8 @@ One of the clearest findings is that almost all the evidence comes from microgra
 
 The project uses Python with FastAPI and SQLite on the backend, and React with Tailwind on the frontend. The assistant runs on Gemma 4 on a team server and uses Claude as a fallback. All data and images come from NASA.
 
+URL: https://flame-runner-frontend.onrender.com/
+
 ## Use of artificial intelligence
 
 We used AI tools during development, always under the team's direction and review. Claude, by Anthropic, helped us automate the collection of information from the resources provided by NASA Space Apps and the PSI repository, extract and verify findings from the documents, carry out repetitive tasks such as data cleaning and translation, review code, and keep the project consistent with the structure our team defined. Every extracted finding was automatically checked against the exact text of its source document, and the design decisions, scope, and final content were decided and validated by the team.
